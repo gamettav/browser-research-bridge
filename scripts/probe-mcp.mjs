@@ -38,7 +38,7 @@ try {
   const statusText = statusResult?.content?.find?.((item) => item?.type === "text")?.text;
   if (typeof statusText !== "string") throw new Error("bridge_status returned no text content");
   const status = JSON.parse(statusText);
-  const expectedBuildId = "browser-research-0.4.0-auth-v2";
+  const expectedBuildId = "browser-research-0.4.0-progress-v3";
   if (status.brokerBuildId !== expectedBuildId) {
     throw new Error(`Broker runtime is stale: expected ${expectedBuildId}, got ${status.brokerBuildId ?? "unknown"}`);
   }

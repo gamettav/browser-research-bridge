@@ -10,6 +10,8 @@ This is not an anti-bot or access-control bypass. It does not solve CAPTCHAs, sp
 - `search_web`: collect links and snippets from DuckDuckGo, Bing, or Google in a real tab.
 - `fetch_rendered_page`: render a public HTTP(S) page, extract readable Markdown, links, and metadata, and close the tab.
 - `list_captures` and `read_capture`: paginate stable citation blocks retained for the current MCP process.
+- Research-session correlation and live job activity: queued, searching, navigating, rendering, extracting, completed, skipped, and failed, with counted sources and per-source duration.
+- An accessible action popup with live domain/stage/timing/queue status, color-independent toolbar badges, connection diagnostics, version details, and a privacy-bounded recent-activity list.
 - Shared stdio MCP binary for Codex and Claude Code.
 - A persistent local broker shared by concurrent Codex and Claude MCP sessions.
 - Chrome MV3 service worker with Native Messaging, exact-origin mutual HMAC authentication, and a loopback WebSocket fallback that never transmits the shared token.
@@ -59,7 +61,7 @@ The non-browser lifecycle acceptance test is included in `pnpm check`; it verifi
 
 1. Create a dedicated, low-privilege Chrome profile. This is a security requirement for the current preview, not an optional recommendation. Sign into only the sources this research agent should be allowed to read.
 2. Open `chrome://extensions`, enable Developer mode, choose **Load unpacked**, and select `apps/chrome-extension/dist`. Approve the requested site and Native Messaging permissions. The manifest also declares `dns` for an additional check available only in Chrome Dev/Chrome for Testing; Stable Chrome safely falls back to the broker check.
-3. Open the extension options. Copy the displayed extension ID.
+3. Open the extension popup, choose **Settings**, and copy the displayed extension ID.
 4. Run the setup command using the displayed extension ID:
 
    ```sh
@@ -98,6 +100,10 @@ node packages/mcp-server/dist/index.cjs
 ```
 
 The optional port defaults to `32189`. The extension first asks Chrome to start the allowlisted Native Messaging relay. That relay auto-starts the detached broker when needed and forwards only framed JSON between Chrome and the broker. If the host is not installed, the extension falls back to an authenticated loopback WebSocket. Later Codex and Claude sessions authenticate to and reuse the same broker, which exits ten minutes after the last MCP client disconnects. MCP clients reconnect and restart the broker after a mid-session broker failure. Compatibility is gated by the wire `PROTOCOL_VERSION`, so ordinary release upgrades can reuse a running compatible broker.
+
+Browser calls return a UUID `sessionId`; reuse it across one research run and pass `sourceIndex` plus `sourceTotal` after ranking sources. Harnesses that provide an MCP progress token receive throttled native progress with domain-only activity metadata. Calls that finish in under one second emit no progress notifications. Other harnesses can use the result's `research.durationMs`, safe domain, and `nativeProgress` flag for concise conversational updates. Failures return a structured `error.code` and terminal outcome for deterministic recovery in the bundled skill.
+
+The toolbar opens the activity popup rather than settings directly. Its badge is empty/green when ready, blue `S` while searching, a blue count for active work, red `!` for errors, and a yellow lock for login or CAPTCHA challenges. Recent activity persists only domain, timestamp, duration, and outcome; queries, page content, URL paths/parameters, credentials, and error text are never part of the history record. Choose **Clear** to remove it.
 
 ## Codex
 

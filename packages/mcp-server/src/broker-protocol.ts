@@ -1,5 +1,14 @@
 import { z } from "zod";
-import { BRIDGE_BUILD_ID, BRIDGE_VERSION, BrowserJobSchema, JobResultMessageSchema, ProgressEventSchema } from "@browser-research/protocol";
+import {
+  BRIDGE_BUILD_ID,
+  BRIDGE_VERSION,
+  BrowserJobSchema,
+  JobResultMessageSchema,
+  ProgressEventSchema,
+  ResearchErrorCodeSchema,
+  ResearchSessionIdSchema,
+  SourceCounterSchema
+} from "@browser-research/protocol";
 
 export const BROKER_VERSION = BRIDGE_VERSION;
 export const BROKER_BUILD_ID = BRIDGE_BUILD_ID;
@@ -14,6 +23,8 @@ export const BrokerRequestSchema = z.discriminatedUnion("operation", [
     type: z.literal("broker_request"),
     id: z.string().uuid(),
     operation: z.literal("run_job"),
+    sessionId: ResearchSessionIdSchema,
+    source: SourceCounterSchema.optional(),
     job: BrowserJobSchema
   })
 ]);
@@ -42,7 +53,7 @@ export const BrokerResponseSchema = z.discriminatedUnion("ok", [
     type: z.literal("broker_response"),
     id: z.string().uuid(),
     ok: z.literal(false),
-    error: z.object({ code: z.string(), message: z.string() })
+    error: z.object({ code: ResearchErrorCodeSchema, message: z.string() })
   })
 ]);
 

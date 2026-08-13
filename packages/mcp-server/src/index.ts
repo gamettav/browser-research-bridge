@@ -1,27 +1,28 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { randomUUID } from "node:crypto";
 import { resolve } from "node:path";
 import {
   PageExtractionSchema,
   SearchExtractionSchema,
   isAllowedPublicWebUrl,
-  safeDomain
+  safeDomain,
+  type ResearchContext,
+  type ResearchErrorCode
 } from "@browser-research/protocol";
 import { BRIDGE_VERSION } from "@browser-research/protocol";
 import { BrokerClient } from "./broker-client.js";
 import { CaptureStore } from "./captures.js";
 import { loadServerConfig } from "./config.js";
 import { challengeErrorCode, classifyThrown, makeReporter, mapErrorCode, searchDomain } from "./progress.js";
+import { createResearchContext, researchActivity, researchErrorPayload } from "./research.js";
 
-// Optional research-session correlation, shared by the browsing tools. The skill
-// generates a sessionId and per-source counters; the server echoes them into
-// progress messages and the result, and generates a sessionId when none is given.
+// Optional research-session correlation shared by both browsing tools. The first
+// call can omit sessionId and reuse the generated UUID returned in its result.
 const sessionInputs = {
-  sessionId: z.string().min(1).max(64).optional(),
-  sourceIndex: z.number().int().positive().optional(),
-  sourceTotal: z.number().int().positive().optional()
+  sessionId: z.string().uuid().optional().describe("UUID shared by all browser calls for one research request"),
+  sourceIndex: z.number().int().positive().optional().describe("One-based position of this source"),
+  sourceTotal: z.number().int().positive().optional().describe("Total sources planned for this research request")
 };
 
 async function main(): Promise<void> {
@@ -68,29 +69,62 @@ server.registerTool(
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true }
   },
   async ({ query, provider, limit, timeoutMs, sessionId, sourceIndex, sourceTotal }, extra) => {
-    const session = sessionId ?? randomUUID();
-    const reporter = makeReporter(extra, { sourceIndex, sourceTotal });
+    const startedAt = Date.now();
+    const context = createResearchContext(sessionId, sourceIndex, sourceTotal);
+    const reporter = makeReporter(extra, context.value);
     const domain = searchDomain(provider);
+    if (context.error) {
+      const durationMs = Date.now() - startedAt;
+      reporter.fail("invalid_request", domain, durationMs);
+      return researchToolError(context.value, "invalid_request", context.error, domain, durationMs, reporter.nativeProgress);
+    }
     try {
-      const message = await bridge.runJob({ kind: "search_web", query, provider, limit, timeoutMs }, reporter.onProgress);
+      const message = await bridge.runJob(
+        { kind: "search_web", query, provider, limit, timeoutMs },
+        context.value,
+        reporter.onProgress
+      );
       if (!message.ok) {
-        reporter.fail(mapErrorCode(message.error.code), domain);
-        return toolError(message.error.message);
+        const code = mapErrorCode(message.error.code);
+        reporter.fail(code, domain, message.durationMs);
+        return researchToolError(context.value, code, message.error.message, domain, message.durationMs, reporter.nativeProgress);
       }
       const parsed = SearchExtractionSchema.safeParse(message.result);
       if (!parsed.success) {
-        reporter.fail("extraction_failed", domain);
-        return toolError("Chrome returned an invalid search result payload");
+        reporter.fail("invalid_response", domain, message.durationMs);
+        return researchToolError(
+          context.value,
+          "invalid_response",
+          "Chrome returned an invalid search result payload",
+          domain,
+          message.durationMs,
+          reporter.nativeProgress
+        );
       }
       if (parsed.data.challenge) {
-        reporter.fail(challengeErrorCode(parsed.data.challengeKind), domain);
-        return toolError("The search provider presented a challenge or access page");
+        const code = challengeErrorCode(parsed.data.challengeKind);
+        reporter.fail(code, domain, message.durationMs);
+        return researchToolError(
+          context.value,
+          code,
+          "The search provider presented a challenge or access page",
+          domain,
+          message.durationMs,
+          reporter.nativeProgress
+        );
       }
-      reporter.done(domain);
-      return textResult({ classification: "UNTRUSTED_WEB_CONTENT", sessionId: session, ...parsed.data });
+      reporter.done(domain, message.durationMs);
+      return structuredResult({
+        classification: "UNTRUSTED_WEB_CONTENT",
+        sessionId: context.value.sessionId,
+        research: researchActivity(context.value, domain, "completed", message.durationMs, reporter.nativeProgress),
+        ...parsed.data
+      });
     } catch (error) {
-      reporter.fail(classifyThrown(errorMessage(error)), domain);
-      return toolError(errorMessage(error));
+      const code = classifyThrown(error);
+      const durationMs = Date.now() - startedAt;
+      reporter.fail(code, domain, durationMs);
+      return researchToolError(context.value, code, errorMessage(error), domain, durationMs, reporter.nativeProgress);
     }
   }
 );
@@ -110,39 +144,76 @@ server.registerTool(
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true }
   },
   async ({ url, timeoutMs, maxChars, sessionId, sourceIndex, sourceTotal }, extra) => {
+    const startedAt = Date.now();
+    const context = createResearchContext(sessionId, sourceIndex, sourceTotal);
+    const reporter = makeReporter(extra, context.value);
+    const domain = safeDomain(url);
+    if (context.error) {
+      const durationMs = Date.now() - startedAt;
+      reporter.fail("invalid_request", domain, durationMs);
+      return researchToolError(context.value, "invalid_request", context.error, domain, durationMs, reporter.nativeProgress);
+    }
     if (!isAllowedPublicWebUrl(url)) {
-      return toolError("Only public HTTP(S) URLs are allowed; localhost, private networks, and browser-internal schemes are blocked");
+      const durationMs = Date.now() - startedAt;
+      const message = "Only public HTTP(S) URLs are allowed; localhost, private networks, and browser-internal schemes are blocked";
+      reporter.fail("invalid_request", domain, durationMs);
+      return researchToolError(context.value, "invalid_request", message, domain, durationMs, reporter.nativeProgress);
     }
 
-    const session = sessionId ?? randomUUID();
-    const reporter = makeReporter(extra, { sourceIndex, sourceTotal });
-    const domain = safeDomain(url);
     try {
-      const message = await bridge.runJob({ kind: "fetch_rendered_page", url, timeoutMs, maxChars }, reporter.onProgress);
+      const message = await bridge.runJob(
+        { kind: "fetch_rendered_page", url, timeoutMs, maxChars },
+        context.value,
+        reporter.onProgress
+      );
       if (!message.ok) {
-        reporter.fail(mapErrorCode(message.error.code), domain);
-        return toolError(message.error.message);
+        const code = mapErrorCode(message.error.code);
+        reporter.fail(code, domain, message.durationMs);
+        return researchToolError(context.value, code, message.error.message, domain, message.durationMs, reporter.nativeProgress);
       }
       const parsed = PageExtractionSchema.safeParse(message.result);
       if (!parsed.success) {
-        reporter.fail("extraction_failed", domain);
-        return toolError("Chrome returned an invalid page payload");
+        reporter.fail("invalid_response", domain, message.durationMs);
+        return researchToolError(
+          context.value,
+          "invalid_response",
+          "Chrome returned an invalid page payload",
+          domain,
+          message.durationMs,
+          reporter.nativeProgress
+        );
       }
       const finalDomain = safeDomain(parsed.data.finalUrl) ?? domain;
       if (!isAllowedPublicWebUrl(parsed.data.finalUrl)) {
-        reporter.fail("blocked_redirect", finalDomain);
-        return toolError("Navigation redirected to a blocked origin");
+        reporter.fail("blocked_redirect", finalDomain, message.durationMs);
+        return researchToolError(
+          context.value,
+          "blocked_redirect",
+          "Navigation redirected to a blocked origin",
+          finalDomain,
+          message.durationMs,
+          reporter.nativeProgress
+        );
       }
       if (parsed.data.challenge) {
-        reporter.fail(challengeErrorCode(parsed.data.challengeKind), finalDomain);
-        return toolError("The page presented a login, CAPTCHA, challenge, or access-denied screen");
+        const code = challengeErrorCode(parsed.data.challengeKind);
+        reporter.fail(code, finalDomain, message.durationMs);
+        return researchToolError(
+          context.value,
+          code,
+          "The page presented a login, CAPTCHA, challenge, or access-denied screen",
+          finalDomain,
+          message.durationMs,
+          reporter.nativeProgress
+        );
       }
 
       const capture = captures.add(parsed.data);
-      reporter.done(finalDomain);
-      return textResult({
+      reporter.done(finalDomain, message.durationMs);
+      return structuredResult({
         classification: "UNTRUSTED_WEB_CONTENT",
-        sessionId: session,
+        sessionId: context.value.sessionId,
+        research: researchActivity(context.value, finalDomain, "completed", message.durationMs, reporter.nativeProgress),
         captureId: capture.id,
         title: capture.title,
         requestedUrl: capture.requestedUrl,
@@ -157,8 +228,10 @@ server.registerTool(
         links: capture.links.slice(0, 100)
       });
     } catch (error) {
-      reporter.fail(classifyThrown(errorMessage(error)), domain);
-      return toolError(errorMessage(error));
+      const code = classifyThrown(error);
+      const durationMs = Date.now() - startedAt;
+      reporter.fail(code, domain, durationMs);
+      return researchToolError(context.value, code, errorMessage(error), domain, durationMs, reporter.nativeProgress);
     }
   }
 );
@@ -233,8 +306,31 @@ function textResult(value: unknown) {
   return { content: [{ type: "text" as const, text: JSON.stringify(value, null, 2) }] };
 }
 
+function structuredResult(value: Record<string, unknown>) {
+  return {
+    content: [{ type: "text" as const, text: JSON.stringify(value, null, 2) }],
+    structuredContent: value
+  };
+}
+
 function toolError(message: string) {
   return { content: [{ type: "text" as const, text: message }], isError: true };
+}
+
+function researchToolError(
+  context: ResearchContext,
+  code: ResearchErrorCode,
+  message: string,
+  domain: string | null,
+  durationMs: number,
+  nativeProgress: boolean
+) {
+  const value = researchErrorPayload(context, code, message, domain, durationMs, nativeProgress);
+  return {
+    content: [{ type: "text" as const, text: JSON.stringify(value, null, 2) }],
+    structuredContent: value,
+    isError: true
+  };
 }
 
 function errorMessage(error: unknown): string {

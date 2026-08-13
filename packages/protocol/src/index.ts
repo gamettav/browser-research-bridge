@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 export const DEFAULT_PORT = 32189;
-export const PROTOCOL_VERSION = 2;
+export const PROTOCOL_VERSION = 3;
 export const BRIDGE_VERSION = "0.4.0";
-export const BRIDGE_BUILD_ID = "browser-research-0.4.0-auth-v2";
+export const BRIDGE_BUILD_ID = "browser-research-0.4.0-progress-v3";
 export const TOKEN_PATTERN = /^[0-9a-f]{64}$/;
 export const PROOF_PATTERN = /^[0-9a-f]{64}$/;
 export const NONCE_PATTERN = /^[0-9a-f]{64}$/;
@@ -75,9 +75,31 @@ export const BrowserJobSchema = z.discriminatedUnion("kind", [
   SearchJobSchema
 ]);
 
+export const ResearchSessionIdSchema = z.string().uuid();
+export type ResearchSessionId = z.infer<typeof ResearchSessionIdSchema>;
+
+export const SourceCounterSchema = z.object({
+  index: z.number().int().positive(),
+  total: z.number().int().positive()
+}).superRefine((source, context) => {
+  if (source.index > source.total) {
+    context.addIssue({ code: z.ZodIssueCode.custom, message: "Source index cannot exceed source total", path: ["index"] });
+  }
+});
+export type SourceCounter = z.infer<typeof SourceCounterSchema>;
+
+export const ResearchContextSchema = z.object({
+  sessionId: ResearchSessionIdSchema,
+  source: SourceCounterSchema.optional()
+});
+export type ResearchContext = z.infer<typeof ResearchContextSchema>;
+
 export const JobMessageSchema = z.object({
   type: z.literal("job"),
   id: z.string().uuid(),
+  sessionId: ResearchSessionIdSchema,
+  source: SourceCounterSchema.optional(),
+  queuedAt: z.number().int().positive(),
   deadlineAt: z.number().int().positive(),
   job: BrowserJobSchema
 });
@@ -158,13 +180,15 @@ export const RESEARCH_PHASES = [
 ] as const;
 export const ResearchPhaseSchema = z.enum(RESEARCH_PHASES);
 export type ResearchPhase = z.infer<typeof ResearchPhaseSchema>;
+export type TerminalResearchPhase = Extract<ResearchPhase, "completed" | "skipped" | "failed">;
 
-export const TERMINAL_PHASES: readonly ResearchPhase[] = ["completed", "skipped", "failed"];
-export function isTerminalPhase(phase: ResearchPhase): boolean {
-  return TERMINAL_PHASES.includes(phase);
+export const TERMINAL_PHASES: readonly TerminalResearchPhase[] = ["completed", "skipped", "failed"];
+export function isTerminalPhase(phase: ResearchPhase): phase is TerminalResearchPhase {
+  return (TERMINAL_PHASES as readonly ResearchPhase[]).includes(phase);
 }
 
 export const RESEARCH_ERROR_CODES = [
+  "invalid_request",
   "not_connected",
   "blocked_url",
   "blocked_redirect",
@@ -176,6 +200,8 @@ export const RESEARCH_ERROR_CODES = [
   "tab_failed",
   "extraction_failed",
   "job_expired",
+  "invalid_response",
+  "protocol_error",
   "bridge_error"
 ] as const;
 export const ResearchErrorCodeSchema = z.enum(RESEARCH_ERROR_CODES);
@@ -197,14 +223,38 @@ export function terminalPhaseForError(code: ResearchErrorCode): "skipped" | "fai
   return SKIP_ERROR_CODES.has(code) ? "skipped" : "failed";
 }
 
-// One lifecycle event for one source (job). `domain` is a bare hostname or null.
+// Activity metadata accepts only a DNS name/IP literal. Paths, ports, query
+// strings, fragments, userinfo, and schemes are rejected at the wire boundary.
+export const ActivityDomainSchema = z.string().min(1).max(253).transform((value) => value.toLowerCase().replace(/\.$/, "")).refine(
+  (value) => /^(?:[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?|[0-9a-f]*:[0-9a-f:]+)$/i.test(value),
+  "Expected a domain or IP literal without a URL path, port, query, or fragment"
+);
+export type ActivityDomain = z.infer<typeof ActivityDomainSchema>;
+
+// One lifecycle event for one source (job). `domain` is deliberately the only
+// activity metadata: never add a full URL, path, query, title, or search terms.
 export const ProgressEventSchema = z.object({
   type: z.literal("job_progress"),
   id: z.string().uuid(),
+  sessionId: ResearchSessionIdSchema,
+  source: SourceCounterSchema.optional(),
   phase: ResearchPhaseSchema,
-  domain: z.string().max(255).nullable().default(null),
-  elapsedMs: z.number().int().nonnegative().optional(),
+  domain: ActivityDomainSchema.nullable().default(null),
+  elapsedMs: z.number().int().nonnegative(),
   errorCode: ResearchErrorCodeSchema.optional()
+}).superRefine((event, context) => {
+  if ((event.phase === "skipped" || event.phase === "failed") && !event.errorCode) {
+    context.addIssue({ code: z.ZodIssueCode.custom, message: "Terminal error events require an error code", path: ["errorCode"] });
+  }
+  if (event.phase !== "skipped" && event.phase !== "failed" && event.errorCode) {
+    context.addIssue({ code: z.ZodIssueCode.custom, message: "Only skipped or failed events may carry an error code", path: ["errorCode"] });
+  }
+  if (event.phase === "skipped" && event.errorCode && !isSkippableErrorCode(event.errorCode)) {
+    context.addIssue({ code: z.ZodIssueCode.custom, message: "Skipped events require a skippable error code", path: ["errorCode"] });
+  }
+  if (event.phase === "failed" && event.errorCode && isSkippableErrorCode(event.errorCode)) {
+    context.addIssue({ code: z.ZodIssueCode.custom, message: "Failed events require a hard error code", path: ["errorCode"] });
+  }
 });
 export type ProgressEvent = z.infer<typeof ProgressEventSchema>;
 
@@ -212,7 +262,8 @@ export type ProgressEvent = z.infer<typeof ProgressEventSchema>;
 export function safeDomain(value: string | null | undefined): string | null {
   if (!value) return null;
   try {
-    return new URL(value).hostname.toLowerCase().replace(/^\[|\]$/g, "") || null;
+    const domain = new URL(value).hostname.toLowerCase().replace(/^\[|\]$/g, "").replace(/\.$/, "");
+    return ActivityDomainSchema.safeParse(domain).success ? domain : null;
   } catch {
     return null;
   }
@@ -229,15 +280,19 @@ export const JobResultMessageSchema = z.discriminatedUnion("ok", [
   z.object({
     type: z.literal("job_result"),
     id: z.string().uuid(),
+    sessionId: ResearchSessionIdSchema,
+    durationMs: z.number().int().nonnegative(),
     ok: z.literal(true),
     result: z.discriminatedUnion("kind", [PageExtractionSchema, SearchExtractionSchema])
   }),
   z.object({
     type: z.literal("job_result"),
     id: z.string().uuid(),
+    sessionId: ResearchSessionIdSchema,
+    durationMs: z.number().int().nonnegative(),
     ok: z.literal(false),
     error: z.object({
-      code: z.string(),
+      code: ResearchErrorCodeSchema,
       message: z.string()
     })
   })

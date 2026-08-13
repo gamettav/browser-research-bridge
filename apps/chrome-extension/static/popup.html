@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Browser Research activity</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main>
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">BROWSER RESEARCH</p>
+          <h1>Activity</h1>
+        </div>
+        <div id="toolbar-status" class="status-chip" role="status" aria-live="polite" data-mode="ready">
+          <span id="toolbar-status-symbol" class="status-symbol" aria-hidden="true">✓</span>
+          <span id="toolbar-status-text">Ready</span>
+        </div>
+      </header>
+
+      <section id="current-activity" class="card current-card" aria-labelledby="current-heading" data-active="false">
+        <div class="section-heading">
+          <h2 id="current-heading">Current activity</h2>
+          <span class="activity-pulse" aria-hidden="true"></span>
+        </div>
+        <p id="current-domain" class="domain">No active page</p>
+        <dl class="activity-grid">
+          <div>
+            <dt>Stage</dt>
+            <dd id="current-stage" aria-live="polite">Ready</dd>
+          </div>
+          <div>
+            <dt>Elapsed</dt>
+            <dd id="current-elapsed">—</dd>
+          </div>
+          <div>
+            <dt>Queue</dt>
+            <dd id="current-queue">—</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="card" aria-labelledby="recent-heading">
+        <div class="section-heading">
+          <h2 id="recent-heading">Recent activity</h2>
+          <button id="clear-activity" class="text-button" type="button" aria-label="Clear recent activity">Clear</button>
+        </div>
+        <p id="recent-empty" class="empty-message">No recent reads on this profile.</p>
+        <ul id="recent-list" class="recent-list" aria-label="Recent browser research activity"></ul>
+        <p class="privacy-note">History contains only domain, time, duration, and outcome.</p>
+      </section>
+
+      <section class="card" aria-labelledby="connection-heading">
+        <div class="section-heading">
+          <h2 id="connection-heading">Connection</h2>
+          <span id="connection-badge" class="connection-badge" role="status" data-connected="false">○ Not configured</span>
+        </div>
+        <p id="connection-message" class="connection-message">Open settings to connect</p>
+        <dl class="diagnostic-grid">
+          <div><dt>Transport</dt><dd id="connection-transport">None</dd></div>
+          <div><dt>Heartbeat</dt><dd id="connection-heartbeat">Never</dd></div>
+        </dl>
+        <button id="run-diagnostics" class="secondary-button" type="button" aria-label="Run connection diagnostics">Check again</button>
+      </section>
+
+      <footer>
+        <section class="versions" aria-label="Version information">
+          <dl>
+            <div><dt>Extension</dt><dd id="extension-version">—</dd></div>
+            <div><dt>Broker</dt><dd id="broker-version">—</dd></div>
+            <div><dt>Protocol</dt><dd id="protocol-version">—</dd></div>
+          </dl>
+          <span class="sr-only">Broker build <span id="broker-build">—</span></span>
+        </section>
+        <button id="open-settings" class="primary-button" type="button" aria-label="Open Browser Research Bridge settings">
+          Settings
+          <span aria-hidden="true">→</span>
+        </button>
+      </footer>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

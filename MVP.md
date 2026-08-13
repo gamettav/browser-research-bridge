@@ -7,7 +7,8 @@ Last updated: 2026-08-13
 - v0.4 mutual HMAC challenge-response on both loopback peer types; malicious port-squatter and wrong-secret regressions prove the shared token is never sent before broker identity is established.
 - Final URLs are re-resolved in the broker and the tab URL is re-read immediately before extraction; unsafe or changed final destinations are rejected before content is returned.
 - Broker-owned concurrency queue uses absolute deadlines and survives MV3 worker suspension; disconnects fail in-flight work explicitly.
-- Protocol v2 reports schema/version errors directly and exposes build identity; doctor detects stale copied runtimes and broken pinned Node executables.
+- Protocol v3 reports schema/version errors directly, exposes build identity, and carries correlated domain-only research lifecycle events with per-source duration; doctor detects stale copied runtimes and broken pinned Node executables.
+- The MV3 toolbar popup exposes accessible live activity, privacy-bounded history, clear/diagnostic/settings controls, version details, five color-independent badge states, and session-backed restart recovery with popup/badge/restart regression tests.
 - Official Stable Chrome 151 v0.4 acceptance passed rendered fetch, search, session-cookie, redirect, access-denial, crawler-restricted Bloomberg, concurrent Codex/Claude, and broker-kill recovery tests.
 - Complete browser suite in official Google Chrome Stable 151.0.7922.138, including Native Messaging, rendered extraction, search, and SSRF regressions.
 - Real installed Codex and Claude Code CLIs fetched rendered pages concurrently through one Stable Chrome profile; an observer measured four broker clients during overlap.

@@ -59,13 +59,17 @@ Run these steps in order. Keep concurrency low (at most two pages in flight).
 
 Make the research legible while it runs, without exposing plumbing.
 
-- **One session, counted sources.** Reuse a single research session id across every
-  browsing call for one request, and pass each source's position (for example, 2 of 5) as
-  you go, so activity reads as "Reading 2 of 5 — example.com".
-- **Prefer native progress.** Where the harness renders live tool progress, let it show the
-  lifecycle (queued → searching → navigating → rendering → extracting → done). Where it does
-  not, fall back to brief one-line updates between sources — one short line per source, not a
-  running commentary.
+- **One session, counted sources.** The first browsing result returns a UUID `sessionId`.
+  Reuse it on every later browsing call for the same request. After ranking sources, pass
+  `sourceIndex` and `sourceTotal` on each page read so activity can say "Reading 2 of 5 ·
+  example.com". Never invent a different id midway through a run.
+- **Prefer native progress.** If `research.nativeProgress` is true, do not duplicate the
+  harness's live lifecycle (queued → searching/navigating → rendering → extracting →
+  completed/skipped/failed). Terminal activity includes that source's duration.
+- **Conversational fallback.** If `research.nativeProgress` is false, use the returned
+  `research.durationMs` to emit at most one short, domain-only line between sources, such as
+  "Read 2 of 5 · example.com · 1.4s". Say nothing for operations under 1000ms, and never turn
+  fallback updates into a running commentary.
 - **Domain only.** Activity mentions the site's domain, never the full URL, path, or query.
 - **Terminal outcomes** are completed, skipped, or failed. A skipped source is one that was
   blocked; a failed source hit a hard error.
@@ -91,14 +95,20 @@ Each failure comes back with a structured code — classify by it and move on:
   page", and read the next-ranked source.
 - **`requires_login` (login / paywall)** — Skip it, note "requires sign-in", read an
   alternative.
-- **`access_denied` / `blocked_redirect` (403, forbidden, robots-restricted, blocked
-  origin)** — Skip it, note "access denied", read an alternative.
+- **`access_denied` / `blocked_url` / `blocked_redirect` (403, forbidden,
+  robots-restricted, blocked origin)** — Skip it, note "access denied", read an alternative.
 - **`timeout`** — Retry that one source at most once; if it still fails, skip and recover.
 - **`not_connected` / `bridge_error` / `tab_failed` / `extraction_failed`** — Hard
   failures. For `not_connected`, stop and tell the user local browsing is unavailable;
   otherwise skip that source and continue.
+- **`invalid_request` / `invalid_response` / `protocol_error` / `navigation_changed` /
+  `job_expired`** — Hard contract or runtime failures. Do not retry unchanged input; continue
+  with another source when useful, and surface the limitation if it affects confidence.
 
-The blocked codes mean "skipped — try another source"; the hard codes mean "failed".
+Read the code from the tool result's structured `error.code` field, never by parsing its
+human message. The blocked codes mean "skipped — try another source"; hard codes mean
+"failed". The accompanying `research` object provides outcome, safe domain, source counter,
+per-source duration, and whether native progress was available.
 
 If, after alternative-source recovery, too few sources could be read to answer confidently,
 say so directly and give the best partial answer with what was read — still cited.

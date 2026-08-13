@@ -13,19 +13,27 @@ import {
   clientProofPayload,
   constantTimeHexEqual,
   hmacSha256Hex,
+  isTerminalPhase,
   safeDomain,
   serverProofPayload,
+  terminalPhaseForError,
   type BrowserJob,
   type JobResultMessage,
-  type ProgressEvent
+  type ProgressEvent,
+  type ResearchContext,
+  type ResearchErrorCode
 } from "@browser-research/protocol";
 import { assertPublicResolvedUrl } from "./dns-policy.js";
 
 type PendingJob = {
   id: string;
   job: BrowserJob;
+  context: ResearchContext;
+  queuedAt: number;
+  domain: string | null;
   deadlineAt: number;
   running: boolean;
+  terminalSeen: boolean;
   onProgress: ((event: ProgressEvent) => void) | undefined;
   resolve: (message: JobResultMessage) => void;
   reject: (error: Error) => void;
@@ -115,27 +123,44 @@ export class BrowserBridge {
     this.brokerClients = count;
   }
 
-  async runJob(job: BrowserJob, onProgress?: (event: ProgressEvent) => void): Promise<JobResultMessage> {
+  async runJob(job: BrowserJob, context: ResearchContext, onProgress?: (event: ProgressEvent) => void): Promise<JobResultMessage> {
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-      throw new Error("Chrome extension is not connected. Open Chrome and check the Browser Research extension options.");
+      throw researchError("not_connected", "Chrome extension is not connected. Open Chrome and check the Browser Research extension options.");
     }
 
     const id = randomUUID();
     const timeoutMs = job.timeoutMs + 5_000;
-    const deadlineAt = Date.now() + timeoutMs;
+    const queuedAt = Date.now();
+    const deadlineAt = queuedAt + timeoutMs;
+    const domain = jobDomain(job);
     const result = new Promise<JobResultMessage>((resolve, reject) => {
       const timer = setTimeout(() => {
         const pending = this.pending.get(id);
         if (pending?.running) this.runningJobs -= 1;
+        if (pending) this.emitProgress(pending, "failed", Date.now() - pending.queuedAt, "timeout");
         this.pending.delete(id);
-        reject(new Error(`Browser job timed out after ${timeoutMs}ms`));
+        reject(researchError("timeout", `Browser job timed out after ${timeoutMs}ms`));
         this.pumpJobs();
       }, timeoutMs);
-      this.pending.set(id, { id, job, deadlineAt, running: false, onProgress, resolve, reject, timer });
+      this.pending.set(id, {
+        id,
+        job,
+        context,
+        queuedAt,
+        domain,
+        deadlineAt,
+        running: false,
+        terminalSeen: false,
+        onProgress,
+        resolve,
+        reject,
+        timer
+      });
     });
 
     // Synthesize the queued event; the extension emits the phases that follow.
-    onProgress?.({ type: "job_progress", id, phase: "queued", domain: jobDomain(job), elapsedMs: 0 });
+    const pending = this.pending.get(id)!;
+    this.emitProgress(pending, "queued", 0);
     this.pumpJobs();
     return result;
   }
@@ -143,7 +168,8 @@ export class BrowserBridge {
   async close(): Promise<void> {
     for (const [id, pending] of this.pending) {
       clearTimeout(pending.timer);
-      pending.reject(new Error("Browser bridge is shutting down"));
+      this.emitProgress(pending, "failed", Date.now() - pending.queuedAt, "bridge_error");
+      pending.reject(researchError("bridge_error", "Browser bridge is shutting down"));
       this.pending.delete(id);
     }
     this.socket?.close(1001, "server shutting down");
@@ -226,7 +252,17 @@ export class BrowserBridge {
 
       const progress = ProgressEventSchema.safeParse(input);
       if (progress.success) {
-        this.pending.get(progress.data.id)?.onProgress?.(progress.data);
+        const pending = this.pending.get(progress.data.id);
+        if (!pending) return;
+        if (progress.data.sessionId !== pending.context.sessionId || !sameSource(progress.data.source, pending.context.source)) {
+          sendProtocolError(socket, "invalid_progress_context", "Extension progress did not match the queued research context");
+          this.failPending(pending, "protocol_error", "Extension progress did not match the queued research context");
+          this.pumpJobs();
+          return;
+        }
+        if (isTerminalPhase(progress.data.phase)) pending.terminalSeen = true;
+        pending.domain = progress.data.domain ?? pending.domain;
+        pending.onProgress?.(progress.data);
         return;
       }
 
@@ -246,18 +282,36 @@ export class BrowserBridge {
         }
         const protocolError = ProtocolErrorSchema.safeParse(input);
         if (protocolError.success) {
-          this.rejectAllPending(new Error(`Extension protocol error (${protocolError.data.code}): ${protocolError.data.message}`));
+          this.rejectAllPending(
+            researchError("protocol_error", `Extension protocol error (${protocolError.data.code}): ${protocolError.data.message}`),
+            "protocol_error"
+          );
         } else {
           sendProtocolError(socket, "invalid_extension_message", "Extension sent a schema-invalid message");
-          this.rejectAllPending(new Error("Extension sent a schema-invalid message"));
+          this.rejectAllPending(researchError("protocol_error", "Extension sent a schema-invalid message"), "protocol_error");
         }
         return;
       }
       const pending = this.pending.get(parsed.data.id);
       if (!pending) return;
+      if (parsed.data.sessionId !== pending.context.sessionId) {
+        sendProtocolError(socket, "invalid_result_context", "Extension result did not match the queued research session");
+        this.failPending(pending, "protocol_error", "Extension result did not match the queued research session");
+        this.pumpJobs();
+        return;
+      }
       clearTimeout(pending.timer);
       this.pending.delete(parsed.data.id);
       if (pending.running) this.runningJobs -= 1;
+      if (!pending.terminalSeen) {
+        if (parsed.data.ok) this.emitProgress(pending, "completed", parsed.data.durationMs);
+        else this.emitProgress(
+          pending,
+          terminalPhaseForError(parsed.data.error.code),
+          parsed.data.durationMs,
+          parsed.data.error.code
+        );
+      }
       pending.resolve(parsed.data);
       this.pumpJobs();
     });
@@ -267,7 +321,10 @@ export class BrowserBridge {
       if (this.socket === socket) {
         this.socket = null;
         this.extensionVersion = null;
-        this.rejectAllPending(new Error("Chrome extension disconnected while the browser job was running"));
+        this.rejectAllPending(
+          researchError("not_connected", "Chrome extension disconnected while the browser job was running"),
+          "not_connected"
+        );
       }
     });
   }
@@ -283,20 +340,60 @@ export class BrowserBridge {
       this.socket.send(JSON.stringify({
         type: "job",
         id: pending.id,
+        sessionId: pending.context.sessionId,
+        source: pending.context.source,
+        queuedAt: pending.queuedAt,
         deadlineAt: pending.deadlineAt,
         job: pending.job
       }));
     }
   }
 
-  private rejectAllPending(error: Error): void {
+  private rejectAllPending(error: Error, code: ResearchErrorCode): void {
     for (const [id, pending] of this.pending) {
       clearTimeout(pending.timer);
+      this.emitProgress(pending, terminalPhaseForError(code), Date.now() - pending.queuedAt, code);
       pending.reject(error);
       this.pending.delete(id);
     }
     this.runningJobs = 0;
   }
+
+  private failPending(pending: PendingJob, code: ResearchErrorCode, message: string): void {
+    clearTimeout(pending.timer);
+    this.pending.delete(pending.id);
+    if (pending.running) this.runningJobs -= 1;
+    this.emitProgress(pending, terminalPhaseForError(code), Date.now() - pending.queuedAt, code);
+    pending.reject(researchError(code, message));
+  }
+
+  private emitProgress(
+    pending: PendingJob,
+    phase: ProgressEvent["phase"],
+    elapsedMs: number,
+    errorCode?: ResearchErrorCode
+  ): void {
+    if (isTerminalPhase(phase)) pending.terminalSeen = true;
+    pending.onProgress?.({
+      type: "job_progress",
+      id: pending.id,
+      sessionId: pending.context.sessionId,
+      source: pending.context.source,
+      phase,
+      domain: pending.domain,
+      elapsedMs: Math.max(0, Math.round(elapsedMs)),
+      errorCode
+    });
+  }
+}
+
+function sameSource(left: ResearchContext["source"], right: ResearchContext["source"]): boolean {
+  if (!left || !right) return left === right;
+  return left.index === right.index && left.total === right.total;
+}
+
+function researchError(code: ResearchErrorCode, message: string): Error & { code: ResearchErrorCode } {
+  return Object.assign(new Error(message), { code });
 }
 
 function sendProtocolError(socket: WebSocket, code: string, message: string): void {

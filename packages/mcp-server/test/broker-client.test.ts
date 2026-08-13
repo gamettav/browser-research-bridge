@@ -49,11 +49,14 @@ describe("BrokerClient", () => {
 
     const client = await BrokerClient.connect(options(address.port));
     const events: Array<{ phase: string; domain: string | null }> = [];
+    const sessionId = randomUUID();
     const result = await client.runJob(
       { kind: "search_web", query: "q", provider: "duckduckgo", limit: 10, timeoutMs: 5_000 },
+      { sessionId, source: { index: 1, total: 3 } },
       (event) => events.push({ phase: event.phase, domain: event.domain })
     );
     expect(result.ok).toBe(true);
+    expect(result).toMatchObject({ sessionId, durationMs: 12 });
     expect(events).toContainEqual({ phase: "rendering", domain: "example.com" });
     await client.close();
   });
@@ -229,7 +232,15 @@ function respondAsBroker(socket: WebSocket, overrides: { protocolVersion?: numbe
       socket.send(JSON.stringify({
         type: "broker_progress",
         id,
-        event: { type: "job_progress", id: randomUUID(), phase: "rendering", domain: "example.com", elapsedMs: 12 }
+        event: {
+          type: "job_progress",
+          id: randomUUID(),
+          sessionId: message.sessionId,
+          source: message.source,
+          phase: "rendering",
+          domain: "example.com",
+          elapsedMs: 12
+        }
       }));
       socket.send(JSON.stringify({
         type: "broker_response",
@@ -238,6 +249,8 @@ function respondAsBroker(socket: WebSocket, overrides: { protocolVersion?: numbe
         result: {
           type: "job_result",
           id: randomUUID(),
+          sessionId: message.sessionId,
+          durationMs: 12,
           ok: true,
           result: {
             kind: "search",

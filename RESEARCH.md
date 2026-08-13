@@ -64,6 +64,14 @@ Set `minimum_chrome_version` to 116 for the WebSocket prototype. Chrome 116+ kee
 
 No user gesture is required during this flow because the extension already has host access. Calls should still be asynchronous internally so redirects, slow pages, timeouts, and retries do not block the bridge.
 
+### Visible research activity
+
+One UUID research session correlates every search and page read for a user request. Each job streams queued, searching or navigating, rendering, extracting, and a completed, skipped, or failed terminal event through the broker. Events contain only a bare domain, source position, elapsed milliseconds, and a normalized error code when relevant; full URLs, paths, queries, titles, and search terms are excluded from activity metadata.
+
+The MCP adapter forwards events as `notifications/progress` only when the harness supplies a progress token. It delays the first notification for one second and throttles later transitions, so sub-second work is silent. Tool results always include per-source duration, outcome, safe domain, and whether native progress was available, allowing the skill to provide one concise between-source update as a fallback.
+
+The MV3 action popup reads current activity from `chrome.storage.session`, so it remains coherent if the service worker is suspended and restarted while the popup is open. Only completed history crosses into persistent local storage, using the fixed `{ domain, timestamp, duration, outcome }` schema. The popup also exposes transport/heartbeat diagnostics and extension, broker, build, and protocol versions without reading or displaying the shared token.
+
 ### Permission modes
 
 - **Autonomous mode:** install-time `http://*/*` and `https://*/*` host permissions. This meets the zero-interaction requirement but carries a strong Chrome permission warning.
@@ -229,6 +237,7 @@ It does not remove the need for this project when Codex support, a harness-neutr
 - Captured page instructions cannot trigger a browser or system write action because none exist.
 - Both Codex and Claude Code pass their plugin validators and expose the same MCP tools.
 - Disconnecting Chrome, blocked origins, navigation failures, timeouts, and oversized pages fail clearly.
+- Multi-source runs expose correlated, domain-only lifecycle activity and structured error codes without noisy sub-second updates.
 
 ## Main risks
 

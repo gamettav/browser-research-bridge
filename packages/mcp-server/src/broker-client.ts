@@ -15,7 +15,9 @@ import {
   serverProofPayload,
   type BrowserJob,
   type JobResultMessage,
-  type ProgressEvent
+  type ProgressEvent,
+  type ResearchContext,
+  type ResearchErrorCode
 } from "@browser-research/protocol";
 import { BROKER_BUILD_ID, BROKER_VERSION, BrokerProgressSchema, BrokerResponseSchema, type BrokerResponse, type BrokerStatus } from "./broker-protocol.js";
 
@@ -50,14 +52,14 @@ export class BrokerClient {
 
   async getStatus(): Promise<BrokerStatus> {
     const response = await this.request({ operation: "status" }, 5_000);
-    if (!response.ok) throw new Error(response.error.message);
+    if (!response.ok) throw researchError(response.error.code, response.error.message);
     if (!("connected" in response.result)) throw new Error("Broker returned an invalid status response");
     return response.result;
   }
 
-  async runJob(job: BrowserJob, onProgress?: (event: ProgressEvent) => void): Promise<JobResultMessage> {
-    const response = await this.request({ operation: "run_job", job }, job.timeoutMs + 10_000, onProgress);
-    if (!response.ok) throw new Error(response.error.message);
+  async runJob(job: BrowserJob, context: ResearchContext, onProgress?: (event: ProgressEvent) => void): Promise<JobResultMessage> {
+    const response = await this.request({ operation: "run_job", ...context, job }, job.timeoutMs + 10_000, onProgress);
+    if (!response.ok) throw researchError(response.error.code, response.error.message);
     if (!("type" in response.result) || response.result.type !== "job_result") {
       throw new Error("Broker returned an invalid browser job response");
     }
@@ -78,7 +80,7 @@ export class BrokerClient {
   }
 
   private async request(
-    payload: { operation: "status" } | { operation: "run_job"; job: BrowserJob },
+    payload: { operation: "status" } | ({ operation: "run_job"; job: BrowserJob } & ResearchContext),
     timeoutMs: number,
     onProgress?: (event: ProgressEvent) => void
   ): Promise<BrokerResponse> {
@@ -327,4 +329,8 @@ function errorMessage(error: unknown): string {
 
 function isNodeError(error: unknown): error is NodeJS.ErrnoException {
   return error instanceof Error && "code" in error;
+}
+
+function researchError(code: ResearchErrorCode, message: string): Error & { code: ResearchErrorCode } {
+  return Object.assign(new Error(message), { code });
 }

@@ -4,6 +4,7 @@ import { BrowserBridge, type BrokerConnection } from "./bridge.js";
 import {
   AuthResponseSchema,
   PROTOCOL_VERSION,
+  ResearchErrorCodeSchema,
   clientProofPayload,
   constantTimeHexEqual,
   hmacSha256Hex,
@@ -116,16 +117,32 @@ async function handleRequest(socket: WebSocket, request: ReturnType<typeof Broke
     }
     const result = request.operation === "status"
       ? bridge.getStatus()
-      : await bridge.runJob(request.job, (event) => send(socket, { type: "broker_progress", id: request.id, event }));
+      : await bridge.runJob(
+        request.job,
+        { sessionId: request.sessionId, source: request.source },
+        (event) => send(socket, { type: "broker_progress", id: request.id, event })
+      );
     send(socket, { type: "broker_response", id: request.id, ok: true, result });
   } catch (error) {
     send(socket, {
       type: "broker_response",
       id: request.id,
       ok: false,
-      error: { code: "broker_error", message: error instanceof Error ? error.message : String(error) }
+      error: { code: brokerErrorCode(error), message: error instanceof Error ? error.message : String(error) }
     });
   }
+}
+
+function brokerErrorCode(error: unknown): ReturnType<typeof ResearchErrorCodeSchema.parse> {
+  if (error && typeof error === "object" && "code" in error) {
+    const parsed = ResearchErrorCodeSchema.safeParse(error.code);
+    if (parsed.success) return parsed.data;
+  }
+  const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+  if (message.includes("not connected") || message.includes("disconnected")) return "not_connected";
+  if (message.includes("timed out") || message.includes("timeout")) return "timeout";
+  if (message.includes("public") || message.includes("blocked")) return "blocked_url";
+  return "bridge_error";
 }
 
 function send(socket: WebSocket, message: unknown): void {

@@ -67,18 +67,41 @@ try {
   const status = JSON.parse(toolText(await client.callTool({ name: "bridge_status", arguments: {} })));
   if (!status.connected) throw new Error(`Broker did not see the native relay: ${JSON.stringify(status)}`);
 
+  const progress = [];
   const pendingFetch = client.callTool({
     name: "fetch_rendered_page",
-    arguments: { url: "https://example.com/", timeoutMs: 10_000, maxChars: 20_000 }
-  });
+    arguments: { url: "https://example.com/", timeoutMs: 10_000, maxChars: 20_000, sourceIndex: 1, sourceTotal: 1 }
+  }, undefined, { onprogress: (event) => progress.push(event) });
   const jobMessage = await nextWithTimeout(nativeMessages, 10_000);
   if (jobMessage.type !== "job" || jobMessage.job?.kind !== "fetch_rendered_page") {
     throw new Error(`Native relay did not receive browser job: ${JSON.stringify(jobMessage)}`);
   }
 
   writeNative(native.stdin, {
+    type: "job_progress",
+    id: jobMessage.id,
+    sessionId: jobMessage.sessionId,
+    source: jobMessage.source,
+    phase: "navigating",
+    domain: "example.com",
+    elapsedMs: 50
+  });
+  await new Promise((resolve) => setTimeout(resolve, 1_100));
+  writeNative(native.stdin, {
+    type: "job_progress",
+    id: jobMessage.id,
+    sessionId: jobMessage.sessionId,
+    source: jobMessage.source,
+    phase: "completed",
+    domain: "example.com",
+    elapsedMs: 1_200
+  });
+
+  writeNative(native.stdin, {
     type: "job_result",
     id: jobMessage.id,
+    sessionId: jobMessage.sessionId,
+    durationMs: 1_200,
     ok: true,
     result: {
       kind: "page",
@@ -101,8 +124,17 @@ try {
   if (fetched.isError) throw new Error(`MCP fetch through native relay failed: ${toolText(fetched)}`);
   const parsed = JSON.parse(toolText(fetched));
   if (parsed.title !== "Native relay acceptance") throw new Error(`Unexpected fetch result: ${toolText(fetched)}`);
+  if (parsed.sessionId !== jobMessage.sessionId || parsed.research?.durationMs !== 1_200) {
+    throw new Error(`Research correlation or duration was lost: ${toolText(fetched)}`);
+  }
+  if (fetched.structuredContent?.sessionId !== jobMessage.sessionId || fetched.structuredContent?.research?.activity?.domain !== "example.com") {
+    throw new Error(`Structured research metadata was not exposed: ${JSON.stringify(fetched.structuredContent)}`);
+  }
+  if (progress.length < 2 || !progress.some((event) => event.message?.includes("Reading 1 of 1")) || !progress.some((event) => event.message?.includes("1.2s"))) {
+    throw new Error(`Native MCP progress was not exposed correctly: ${JSON.stringify(progress)}`);
+  }
 
-  process.stdout.write(`${JSON.stringify({ nativeAuth: true, brokerConnected: true, mcpRoundTrip: true, port }, null, 2)}\n`);
+  process.stdout.write(`${JSON.stringify({ nativeAuth: true, brokerConnected: true, mcpRoundTrip: true, progressEvents: progress.length, port }, null, 2)}\n`);
 } finally {
   await client.close().catch(() => undefined);
   native.kill("SIGTERM");

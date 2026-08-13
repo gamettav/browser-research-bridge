@@ -23,9 +23,9 @@ const expression = `new Promise(async resolve => {
     if (message?.type === 'auth_challenge') {
       const expected = await hmac('browser-research|server|extension|' + message.nonce + '|' + message.protocolVersion + '|' + message.serverBuildId);
       if (expected !== message.proof) return resolve({ ok: false, error: 'invalid server proof' });
-      const clientBuildId = 'browser-research-0.4.0-auth-v2';
-      const proof = await hmac('browser-research|client|extension|' + message.nonce + '|2|' + chrome.runtime.id + '|' + clientBuildId);
-      port.postMessage({ type: 'auth_response', channel: 'extension', nonce: message.nonce, protocolVersion: 2, clientId: chrome.runtime.id, clientVersion: chrome.runtime.getManifest().version, clientBuildId, proof });
+      const clientBuildId = 'browser-research-0.4.0-progress-v3';
+      const proof = await hmac('browser-research|client|extension|' + message.nonce + '|3|' + chrome.runtime.id + '|' + clientBuildId);
+      port.postMessage({ type: 'auth_response', channel: 'extension', nonce: message.nonce, protocolVersion: 3, clientId: chrome.runtime.id, clientVersion: chrome.runtime.getManifest().version, clientBuildId, proof });
       return;
     }
     if (message?.type === 'auth_ok') {

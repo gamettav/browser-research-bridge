@@ -51,6 +51,9 @@ alongside the MCP server; no extra step.
 - **No questions during ordinary research** — proceed on the best interpretation.
 - **Failure rules:** CAPTCHA / login / timeout (retry once) / access-denied all → skip and
   recover with an alternative source; never circumvent.
+- **Visible activity:** reuse one session UUID, count ranked sources, prefer throttled native
+  lifecycle progress, and use one domain-only fallback line for operations lasting at least
+  one second when native progress is unavailable.
 - **Footer:** `Discovered N · Read N · Sources used N · Skipped N · Time Ns`.
 - **Internals hidden** (tool names, ports, UUIDs, block IDs) during ordinary use; reveal via
   `/browse debug last` (or `$browse debug last`).

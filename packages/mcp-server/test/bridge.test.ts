@@ -34,6 +34,8 @@ describe("BrowserBridge", () => {
         socket.send(JSON.stringify({
           type: "job_result",
           id: message.id,
+          sessionId: message.sessionId,
+          durationMs: 25,
           ok: true,
           result: {
             kind: "search",
@@ -62,15 +64,20 @@ describe("BrowserBridge", () => {
     }));
     await waitFor(() => messages.some((message) => isRecord(message) && message.type === "auth_ok"));
 
-    const result = await bridge.runJob({
-      kind: "search_web",
-      query: "browser bridge",
-      provider: "duckduckgo",
-      limit: 10,
-      timeoutMs: 5_000
-    });
+    const sessionId = crypto.randomUUID();
+    const result = await bridge.runJob(
+      {
+        kind: "search_web",
+        query: "browser bridge",
+        provider: "duckduckgo",
+        limit: 10,
+        timeoutMs: 5_000
+      },
+      { sessionId }
+    );
 
     expect(result.ok).toBe(true);
+    expect(result).toMatchObject({ sessionId, durationMs: 25 });
     expect(bridge.getStatus()).toMatchObject({ connected: true, extensionVersion: "0.1.0" });
     socket.close();
   });
@@ -84,10 +91,20 @@ describe("BrowserBridge", () => {
       const message = JSON.parse(data.toString()) as Record<string, unknown>;
       messages.push(message);
       if (message.type === "job") {
-        socket.send(JSON.stringify({ type: "job_progress", id: message.id, phase: "rendering", domain: "example.com", elapsedMs: 15 }));
+        socket.send(JSON.stringify({
+          type: "job_progress",
+          id: message.id,
+          sessionId: message.sessionId,
+          source: message.source,
+          phase: "rendering",
+          domain: "example.com",
+          elapsedMs: 15
+        }));
         socket.send(JSON.stringify({
           type: "job_result",
           id: message.id,
+          sessionId: message.sessionId,
+          durationMs: 20,
           ok: true,
           result: {
             kind: "search",
@@ -105,15 +122,18 @@ describe("BrowserBridge", () => {
 
     await opened(socket);
     await authenticateExtension(socket, messages);
-    const events: Array<{ phase: string; domain: string | null }> = [];
+    const events: Array<{ phase: string; domain: string | null; sessionId: string; elapsedMs: number }> = [];
+    const sessionId = crypto.randomUUID();
     const result = await bridge.runJob(
       { kind: "search_web", query: "q", provider: "duckduckgo", limit: 10, timeoutMs: 5_000 },
-      (event) => events.push({ phase: event.phase, domain: event.domain })
+      { sessionId, source: { index: 2, total: 5 } },
+      (event) => events.push({ phase: event.phase, domain: event.domain, sessionId: event.sessionId, elapsedMs: event.elapsedMs })
     );
 
     expect(result.ok).toBe(true);
-    expect(events).toContainEqual({ phase: "queued", domain: "duckduckgo.com" });
-    expect(events).toContainEqual({ phase: "rendering", domain: "example.com" });
+    expect(events).toContainEqual({ phase: "queued", domain: "duckduckgo.com", sessionId, elapsedMs: 0 });
+    expect(events).toContainEqual({ phase: "rendering", domain: "example.com", sessionId, elapsedMs: 15 });
+    expect(events).toContainEqual({ phase: "completed", domain: "example.com", sessionId, elapsedMs: 20 });
     socket.close();
   });
 
