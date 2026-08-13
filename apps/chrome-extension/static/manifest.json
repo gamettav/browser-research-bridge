@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Browser Research Bridge",
+  "version": "0.4.0",
+  "description": "Read-only rendered web research bridge for local MCP clients.",
+  "minimum_chrome_version": "116",
+  "permissions": ["alarms", "dns", "nativeMessaging", "scripting", "storage", "tabs"],
+  "host_permissions": ["http://*/*", "https://*/*"],
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "action": {
+    "default_title": "Browser Research Bridge"
+  }
+}

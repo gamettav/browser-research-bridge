@@ -1,0 +1,6 @@
+{
+  "token": "run-setup-to-generate-a-64-character-lowercase-hex-token",
+  "extensionId": "replace-with-the-id-from-the-extension-options-page",
+  "port": 32189,
+  "brokerIdleMs": 600000
+}

@@ -1,0 +1,21 @@
+{
+  "name": "browser-research",
+  "version": "0.4.0",
+  "description": "Read rendered public web pages through a configured local Chrome profile.",
+  "author": {
+    "name": "Local developer"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Browser Research",
+    "shortDescription": "Read rendered sources through local Chrome.",
+    "longDescription": "Browser Research adds read-only MCP tools for autonomous web discovery and rendered page extraction through a configured local Chrome profile.",
+    "developerName": "Local developer",
+    "category": "Productivity",
+    "capabilities": ["Read"],
+    "defaultPrompt": [
+      "Research this topic with Browser Research and cite the final source URLs."
+    ]
+  },
+  "mcpServers": "./.mcp.json"
+}

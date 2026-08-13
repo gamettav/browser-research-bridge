@@ -1,0 +1,10 @@
+{
+  "name": "browser-research",
+  "displayName": "Browser Research",
+  "version": "0.4.0",
+  "description": "Read rendered public web pages through a configured local Chrome profile.",
+  "author": {
+    "name": "Local developer"
+  },
+  "keywords": ["research", "browser", "mcp", "web"]
+}

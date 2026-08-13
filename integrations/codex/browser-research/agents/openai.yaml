@@ -1,0 +1,28 @@
+# GENERATED from skills-src/browse.mjs by scripts/generate-skills.mjs. Do not edit; edit the canonical file and run `pnpm generate:skills`.
+name: browse
+description: "Research the web to answer a question, look something up, verify a claim, find sources, check the latest on a topic, or read and summarize one or more URLs — through the local Browser Research bridge, which renders pages in your own Chrome when ordinary fetching is blocked, incomplete, or needs JavaScript. Use when the user asks to research, look this up, browse the web, search for sources, find out about, check online, or read a link. Do NOT use for coding, local files, math, or conversation that needs no web sources."
+default_prompt: "Research this topic through Browser Research and answer with cited final source URLs."
+argument_hint: "[quick:|deep:] <question or URL(s)>"
+category: Productivity
+capabilities:
+  - Read
+activation:
+  explicit: "$browse <question>"
+  natural_language:
+    - "research this topic"
+    - "look this up"
+    - "browse the web"
+    - "search the web for"
+    - "find sources on"
+    - "check the latest on"
+    - "verify this online"
+    - "read and summarize this URL"
+tools:
+  mcp:
+    server: browser-research
+    required:
+      - bridge_status
+      - search_web
+      - fetch_rendered_page
+      - list_captures
+      - read_capture

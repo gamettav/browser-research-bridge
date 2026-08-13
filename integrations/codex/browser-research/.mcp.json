@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "browser-research": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${PLUGIN_ROOT}/server/index.cjs"]
+    }
+  }
+}

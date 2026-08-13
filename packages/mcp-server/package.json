@@ -1,0 +1,29 @@
+{
+  "name": "@browser-research/mcp-server",
+  "version": "0.4.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "browser-research-mcp": "dist/index.cjs"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "e2e": "node scripts/e2e.mjs",
+    "e2e:concurrent": "node scripts/e2e-concurrent.mjs",
+    "e2e:sources": "node scripts/e2e-sources.mjs",
+    "e2e:native": "node scripts/e2e-native.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@browser-research/protocol": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.17.2",
+    "ws": "^8.18.3",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.1",
+    "esbuild": "^0.25.8",
+    "vitest": "^3.2.4"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "browser-research-bridge",
+  "version": "0.4.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.15.1",
+  "scripts": {
+    "build": "pnpm generate:skills && pnpm -r build && pnpm package:plugins",
+    "generate:skills": "node scripts/generate-skills.mjs",
+    "build:server": "pnpm --filter @browser-research/mcp-server build",
+    "build:extension": "pnpm --filter @browser-research/chrome-extension build",
+    "package:plugins": "node scripts/package-plugins.mjs",
+    "e2e:configure": "node scripts/e2e-configure.mjs",
+    "e2e:browser": "pnpm build && pnpm e2e:configure && pnpm --filter @browser-research/mcp-server e2e:concurrent",
+    "e2e:native": "pnpm build && pnpm --filter @browser-research/mcp-server e2e:native",
+    "test:lifecycle": "node scripts/test-lifecycle.mjs",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "check": "pnpm typecheck && pnpm test && pnpm build && pnpm test:lifecycle"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "typescript": "^5.8.3"
+  }
+}

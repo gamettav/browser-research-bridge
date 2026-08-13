@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Browser Research Bridge</title>
+    <link rel="stylesheet" href="options.css">
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">LOCAL MCP CONNECTION</p>
+      <h1>Browser Research Bridge</h1>
+      <p class="intro">Connect this Chrome profile to the local read-only research server. Page content is sent only to the MCP process on your computer.</p>
+
+      <section>
+        <h2>Extension identity</h2>
+        <div class="identity">
+          <code id="extension-id"></code>
+          <button id="copy-id" type="button">Copy ID</button>
+        </div>
+        <p class="hint">Use this value as <code>BROWSER_RESEARCH_EXTENSION_ID</code>.</p>
+      </section>
+
+      <form id="settings-form">
+        <label for="token">Bridge token</label>
+        <input id="token" name="token" type="password" minlength="64" maxlength="64" pattern="[0-9a-f]{64}" required autocomplete="off" spellcheck="false">
+        <p class="hint">Use the same high-entropy token as <code>BROWSER_RESEARCH_TOKEN</code>. It stays in this Chrome profile.</p>
+
+        <label for="port">Local broker port</label>
+        <input id="port" name="port" type="number" min="1024" max="65535" required value="32189">
+        <p class="hint">Native Messaging is preferred. This port is also used by the automatic loopback fallback.</p>
+
+        <button class="primary" type="submit">Save and connect</button>
+      </form>
+
+      <output id="status" role="status">Not configured</output>
+
+      <aside>
+        <strong>Security boundary</strong>
+        <p>The extension can read HTTP(S) pages in this profile. Use a dedicated, low-privilege Chrome profile. It does not read cookies directly, capture form values, solve CAPTCHAs, or perform clicks and form submissions.</p>
+      </aside>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>

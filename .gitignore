@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.DS_Store
+coverage/
+*.log
+/config.json
+integrations/codex/browser-research/server/
+integrations/claude/browser-research/server/

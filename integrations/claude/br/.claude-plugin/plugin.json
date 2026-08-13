@@ -1,0 +1,16 @@
+{
+  "_generated": "from skills-src/browse.mjs by scripts/generate-skills.mjs — do not edit",
+  "name": "br",
+  "displayName": "Browser Research — browse",
+  "version": "0.4.0",
+  "description": "Portable /br:browse command: research the web through the local Browser Research bridge.",
+  "author": {
+    "name": "Local developer"
+  },
+  "keywords": [
+    "research",
+    "browse",
+    "web",
+    "mcp"
+  ]
+}
