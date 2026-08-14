@@ -38,7 +38,7 @@ The public install flow has three steps:
 That is the whole user setup. The agent plugin starts the local MCP broker itself. Users do not clone this repository, install Native Messaging, download a second Chrome, enable Developer Mode, copy an extension ID, or paste a permanent token.
 
 > [!IMPORTANT]
-> The software and release packages are ready for store submission, but the Chrome, Codex, and Claude listings are not live yet. The website keeps their install buttons marked as pending until the approved URLs exist.
+> GroundTab's Chrome extension is awaiting Web Store review. The Codex and Claude listings are not live yet. Install buttons will become active as each listing is approved.
 
 ## Where it helps
 
