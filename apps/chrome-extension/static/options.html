@@ -3,41 +3,35 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Browser Research Bridge</title>
+    <title>Browser Research</title>
     <link rel="stylesheet" href="options.css">
   </head>
   <body>
     <main>
-      <p class="eyebrow">LOCAL MCP CONNECTION</p>
-      <h1>Browser Research Bridge</h1>
-      <p class="intro">Connect this Chrome profile to the local read-only research server. Page content is sent only to the MCP process on your computer.</p>
+      <p class="eyebrow">BROWSER RESEARCH</p>
+      <h1>Connect Chrome to your agent</h1>
+      <p class="intro">Install the Browser Research plugin in Codex or Claude Code. Ask the agent to <q>set up Browser Research</q>, then enter the one-time code it shows you.</p>
 
-      <section>
-        <h2>Extension identity</h2>
-        <div class="identity">
-          <code id="extension-id"></code>
-          <button id="copy-id" type="button">Copy ID</button>
-        </div>
-        <p class="hint">Use this value as <code>BROWSER_RESEARCH_EXTENSION_ID</code>.</p>
+      <section class="connection-card">
+        <h2>Connection</h2>
+        <output id="status" role="status">Looking for the agent plugin…</output>
+        <button id="pair-again" class="secondary" type="button" hidden>Pair again</button>
       </section>
 
-      <form id="settings-form">
-        <label for="token">Bridge token</label>
-        <input id="token" name="token" type="password" minlength="64" maxlength="64" pattern="[0-9a-f]{64}" required autocomplete="off" spellcheck="false">
-        <p class="hint">Use the same high-entropy token as <code>BROWSER_RESEARCH_TOKEN</code>. It stays in this Chrome profile.</p>
-
-        <label for="port">Local broker port</label>
-        <input id="port" name="port" type="number" min="1024" max="65535" required value="32189">
-        <p class="hint">Native Messaging is preferred. This port is also used by the automatic loopback fallback.</p>
-
-        <button class="primary" type="submit">Save and connect</button>
-      </form>
-
-      <output id="status" role="status">Not configured</output>
+      <section id="pairing-panel">
+        <div class="step"><span>1</span><p>Install the Browser Research plugin or MCP in Codex or Claude Code.</p></div>
+        <div class="step"><span>2</span><p>Ask the agent: <strong>“Set up Browser Research.”</strong></p></div>
+        <div class="step"><span>3</span><p>Enter the code shown by the agent. It expires after 10 minutes.</p></div>
+        <form id="pairing-form">
+          <label for="pairing-code">One-time pairing code</label>
+          <input id="pairing-code" name="pairing-code" type="text" inputmode="text" maxlength="19" placeholder="AB12-CD34-EF56-7890" required autocomplete="off" spellcheck="false">
+          <button id="pair-button" class="primary" type="submit">Connect Chrome</button>
+        </form>
+      </section>
 
       <aside>
-        <strong>Security boundary</strong>
-        <p>The extension can read HTTP(S) pages in this profile. Use a dedicated, low-privilege Chrome profile. It does not read cookies directly, capture form values, solve CAPTCHAs, or perform clicks and form submissions.</p>
+        <strong>Your browser stays in control</strong>
+        <p>The extension performs read-only research on public HTTP(S) pages. It does not expose cookie values, capture form fields, solve CAPTCHAs, click controls, or bypass authentication and paywalls. Sensitive signed-in sites are denied by default.</p>
       </aside>
     </main>
     <script src="options.js"></script>

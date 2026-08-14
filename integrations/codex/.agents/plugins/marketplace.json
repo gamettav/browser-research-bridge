@@ -1,0 +1,19 @@
+{
+  "name": "browser-research-local",
+  "interface": {
+    "displayName": "Browser Research (local)"
+  },
+  "plugins": [
+    {
+      "name": "browser-research",
+      "source": {
+        "source": "local",
+        "path": "./browser-research"
+      },
+      "policy": {
+        "installation": "AVAILABLE"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

@@ -1,5 +1,4 @@
 {
-  "_generated": "from skills-src/browse.mjs by scripts/generate-skills.mjs — do not edit",
   "name": "br",
   "displayName": "Browser Research — browse",
   "version": "0.4.0",

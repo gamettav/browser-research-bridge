@@ -1,14 +1,56 @@
 import { z } from "zod";
 
 export const DEFAULT_PORT = 32189;
-export const PROTOCOL_VERSION = 2;
+export const PROTOCOL_VERSION = 3;
 export const BRIDGE_VERSION = "0.4.0";
-export const BRIDGE_BUILD_ID = "browser-research-0.4.0-auth-v2";
+export const BRIDGE_BUILD_ID = "browser-research-0.4.0-pairing-v3";
 export const TOKEN_PATTERN = /^[0-9a-f]{64}$/;
 export const PROOF_PATTERN = /^[0-9a-f]{64}$/;
 export const NONCE_PATTERN = /^[0-9a-f]{64}$/;
+export const EXTENSION_ID_PATTERN = /^[a-p]{32}$/;
+export const PAIRING_CODE_PATTERN = /^[0-9A-F]{4}(?:-[0-9A-F]{4}){3}$/;
 
 export const AuthChannelSchema = z.enum(["extension", "broker-client"]);
+
+// Extension connections announce whether they already hold a credential. A
+// fresh Web Store install can then enter the bounded pairing flow instead of
+// requiring a Native Messaging host or a manually pasted long-lived token.
+export const ExtensionHelloSchema = z.object({
+  type: z.literal("extension_hello"),
+  extensionId: z.string().regex(EXTENSION_ID_PATTERN),
+  hasToken: z.boolean(),
+  clientVersion: z.string().min(1),
+  clientBuildId: z.string().min(1)
+});
+
+export const PairingRequiredSchema = z.object({
+  type: z.literal("pairing_required"),
+  nonce: z.string().regex(NONCE_PATTERN),
+  protocolVersion: z.number().int().nonnegative(),
+  port: z.number().int().min(1024).max(65535),
+  expiresAt: z.string().datetime()
+});
+
+export const PairingSubmitSchema = z.object({
+  type: z.literal("pairing_submit"),
+  nonce: z.string().regex(NONCE_PATTERN),
+  proof: z.string().regex(PROOF_PATTERN)
+});
+
+export const PairingOkSchema = z.object({
+  type: z.literal("pairing_ok"),
+  nonce: z.string().regex(NONCE_PATTERN),
+  token: z.string().regex(TOKEN_PATTERN),
+  port: z.number().int().min(1024).max(65535),
+  proof: z.string().regex(PROOF_PATTERN)
+});
+
+export const PairingErrorSchema = z.object({
+  type: z.literal("pairing_error"),
+  code: z.enum(["invalid_code", "expired", "locked", "pairing_unavailable"]),
+  message: z.string().min(1),
+  attemptsRemaining: z.number().int().nonnegative().nullable()
+});
 
 export const AuthChallengeSchema = z.object({
   type: z.literal("auth_challenge"),
@@ -274,12 +316,38 @@ export function clientProofPayload(
   return `browser-research|client|${channel}|${nonce}|${protocolVersion}|${clientId}|${clientBuildId}`;
 }
 
+export function pairingSubmitPayload(nonce: string, extensionId: string, protocolVersion: number): string {
+  return `browser-research|pairing-submit|${nonce}|${protocolVersion}|${extensionId}`;
+}
+
+export function pairingOkPayload(nonce: string, token: string, port: number, extensionId: string, protocolVersion: number): string {
+  return `browser-research|pairing-ok|${nonce}|${protocolVersion}|${extensionId}|${port}|${token}`;
+}
+
 export async function hmacSha256Hex(token: string, payload: string): Promise<string> {
   if (!isValidBridgeToken(token)) throw new Error("Bridge token must be exactly 64 lowercase hexadecimal characters");
+  return signHmacHex(token, payload);
+}
+
+export async function pairingProofHex(pairingCode: string, payload: string): Promise<string> {
+  if (!isValidPairingCode(pairingCode)) throw new Error("Pairing code must contain four groups of four hexadecimal characters");
+  return signHmacHex(pairingCode, payload);
+}
+
+async function signHmacHex(secret: string, payload: string): Promise<string> {
   const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey("raw", encoder.encode(token), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
   return [...new Uint8Array(signature)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+export function normalizePairingCode(value: string): string {
+  const compact = value.toUpperCase().replace(/[^0-9A-F]/g, "").slice(0, 16);
+  return compact.match(/.{1,4}/g)?.join("-") ?? "";
+}
+
+export function isValidPairingCode(value: unknown): value is string {
+  return typeof value === "string" && PAIRING_CODE_PATTERN.test(value);
 }
 
 export function constantTimeHexEqual(actual: string, expected: string): boolean {

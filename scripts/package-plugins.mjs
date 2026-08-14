@@ -4,9 +4,6 @@ import { resolve } from "node:path";
 const root = resolve(import.meta.dirname, "..");
 const serverBuild = resolve(root, "packages/mcp-server/dist/index.cjs");
 const brokerBuild = resolve(root, "packages/mcp-server/dist/broker.cjs");
-const nativeHostBuild = resolve(root, "packages/mcp-server/dist/native-host.cjs");
-const nativeHostInstaller = resolve(root, "scripts/install-native-host.mjs");
-const lifecycleCommand = resolve(root, "scripts/browser-research.mjs");
 const mcpProbe = resolve(root, "scripts/probe-mcp.mjs");
 const destinations = [
   resolve(root, "integrations/codex/browser-research/server"),
@@ -14,12 +11,13 @@ const destinations = [
 ];
 
 for (const destination of destinations) {
+  const pluginRoot = resolve(destination, "..");
   await rm(destination, { recursive: true, force: true });
+  await rm(resolve(pluginRoot, "extension"), { recursive: true, force: true });
+  await rm(resolve(pluginRoot, "install-native-host.mjs"), { force: true });
+  await rm(resolve(pluginRoot, "browser-research.mjs"), { force: true });
   await mkdir(destination, { recursive: true });
   await cp(serverBuild, resolve(destination, "index.cjs"));
   await cp(brokerBuild, resolve(destination, "broker.cjs"));
-  await cp(nativeHostBuild, resolve(destination, "native-host.cjs"));
-  await cp(nativeHostInstaller, resolve(destination, "../install-native-host.mjs"));
-  await cp(lifecycleCommand, resolve(destination, "../browser-research.mjs"));
   await cp(mcpProbe, resolve(destination, "../probe-mcp.mjs"));
 }

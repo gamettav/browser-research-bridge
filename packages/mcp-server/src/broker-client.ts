@@ -24,14 +24,16 @@ type PendingRequest = {
   reject: (error: Error) => void;
   onProgress: ((event: ProgressEvent) => void) | undefined;
   timer: NodeJS.Timeout;
+  cleanup: () => void;
 };
 
 export type BrokerClientOptions = {
   token: string;
-  extensionId: string;
+  extensionId: string | null;
   port: number;
   brokerIdleMs: number;
   brokerPath: string;
+  configPath?: string | null;
 };
 
 export class BrokerClient {
@@ -55,8 +57,8 @@ export class BrokerClient {
     return response.result;
   }
 
-  async runJob(job: BrowserJob, onProgress?: (event: ProgressEvent) => void): Promise<JobResultMessage> {
-    const response = await this.request({ operation: "run_job", job }, job.timeoutMs + 10_000, onProgress);
+  async runJob(job: BrowserJob, onProgress?: (event: ProgressEvent) => void, signal?: AbortSignal): Promise<JobResultMessage> {
+    const response = await this.request({ operation: "run_job", job }, job.timeoutMs + 10_000, onProgress, signal);
     if (!response.ok) throw new Error(response.error.message);
     if (!("type" in response.result) || response.result.type !== "job_result") {
       throw new Error("Broker returned an invalid browser job response");
@@ -80,17 +82,35 @@ export class BrokerClient {
   private async request(
     payload: { operation: "status" } | { operation: "run_job"; job: BrowserJob },
     timeoutMs: number,
-    onProgress?: (event: ProgressEvent) => void
+    onProgress?: (event: ProgressEvent) => void,
+    signal?: AbortSignal
   ): Promise<BrokerResponse> {
+    if (signal?.aborted) throw abortError();
     const socket = await this.ensureConnected();
+    if (signal?.aborted) throw abortError();
     if (socket.readyState !== WebSocket.OPEN) throw new Error("Browser Research broker disconnected before the request was sent");
     const id = randomUUID();
     const response = new Promise<BrokerResponse>((resolve, reject) => {
-      const timer = setTimeout(() => {
+      const onAbort = () => {
+        const pending = this.pending.get(id);
+        if (!pending) return;
+        clearTimeout(pending.timer);
+        pending.cleanup();
         this.pending.delete(id);
+        if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: "broker_cancel", id }));
+        reject(abortError());
+      };
+      const cleanup = () => signal?.removeEventListener("abort", onAbort);
+      const timer = setTimeout(() => {
+        const pending = this.pending.get(id);
+        if (!pending) return;
+        pending.cleanup();
+        this.pending.delete(id);
+        if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: "broker_cancel", id }));
         reject(new Error(`Broker request timed out after ${timeoutMs}ms`));
       }, timeoutMs);
-      this.pending.set(id, { resolve, reject, onProgress, timer });
+      this.pending.set(id, { resolve, reject, onProgress, timer, cleanup });
+      signal?.addEventListener("abort", onAbort, { once: true });
     });
     socket.send(JSON.stringify({ type: "broker_request", id, ...payload }));
     return response;
@@ -140,6 +160,7 @@ export class BrokerClient {
       const pending = this.pending.get(parsed.data.id);
       if (!pending) return;
       clearTimeout(pending.timer);
+      pending.cleanup();
       this.pending.delete(parsed.data.id);
       pending.resolve(parsed.data);
     });
@@ -153,10 +174,17 @@ export class BrokerClient {
   private rejectPending(error: Error): void {
     for (const [id, pending] of this.pending) {
       clearTimeout(pending.timer);
+      pending.cleanup();
       pending.reject(error);
       this.pending.delete(id);
     }
   }
+}
+
+function abortError(): Error {
+  const error = new Error("Browser research request was cancelled");
+  error.name = "AbortError";
+  return error;
 }
 
 async function connectWithBrokerStart(options: BrokerClientOptions): Promise<WebSocket> {
@@ -303,10 +331,11 @@ async function startBrokerOnce(options: BrokerClientOptions): Promise<void> {
 export function brokerEnvironment(options: BrokerClientOptions, parent: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
   const environment: NodeJS.ProcessEnv = {
     BROWSER_RESEARCH_TOKEN: options.token,
-    BROWSER_RESEARCH_EXTENSION_ID: options.extensionId,
     BROWSER_RESEARCH_PORT: String(options.port),
     BROWSER_RESEARCH_BROKER_IDLE_MS: String(options.brokerIdleMs)
   };
+  if (options.extensionId) environment.BROWSER_RESEARCH_EXTENSION_ID = options.extensionId;
+  if (options.configPath) environment.BROWSER_RESEARCH_CONFIG = options.configPath;
   for (const key of ["PATH", "SystemRoot", "WINDIR", "TEMP", "TMP", "TMPDIR", "LANG", "LC_ALL", "TZ"] as const) {
     if (parent[key]) environment[key] = parent[key];
   }

@@ -1,145 +1,165 @@
-# Browser Research Bridge
+<p align="center">
+  <img src="apps/chrome-extension/static/icon-128.png" width="104" alt="Browser Research icon">
+</p>
 
-An early, read-only bridge that lets Codex and Claude Code search and read rendered pages through a local Chrome profile. After one-time setup, MCP tool calls open inactive tabs, extract source content, and close the tabs without requiring interaction during ordinary searches.
+<h1 align="center">Browser Research</h1>
 
-This is not an anti-bot or access-control bypass. It does not solve CAPTCHAs, spoof fingerprints, extract cookies, submit forms, or circumvent login and payment requirements.
+<p align="center">
+  Let Codex and Claude Code read the web through Chrome when ordinary crawling comes back blocked, empty, or half-rendered.
+</p>
 
-## What works
+<p align="center">
+  <img alt="Chrome MV3" src="https://img.shields.io/badge/Chrome-MV3-185743">
+  <img alt="Model Context Protocol" src="https://img.shields.io/badge/MCP-local-185743">
+  <img alt="Read only" src="https://img.shields.io/badge/browser-read--only-185743">
+  <a href="LICENSE"><img alt="Apache 2.0 license" src="https://img.shields.io/badge/license-Apache--2.0-185743"></a>
+</p>
 
-- `bridge_status`: confirm Chrome is connected.
-- `search_web`: collect links and snippets from DuckDuckGo, Bing, or Google in a real tab.
-- `fetch_rendered_page`: render a public HTTP(S) page, extract readable Markdown, links, and metadata, and close the tab.
-- `list_captures` and `read_capture`: paginate stable citation blocks retained for the current MCP process.
-- Shared stdio MCP binary for Codex and Claude Code.
-- A persistent local broker shared by concurrent Codex and Claude MCP sessions.
-- Chrome MV3 service worker with Native Messaging, exact-origin mutual HMAC authentication, and a loopback WebSocket fallback that never transmits the shared token.
-- Broker DNS preflight for initial and final URLs, plus an additional Chrome-side preflight when the Dev-channel-only `chrome.dns` API is available.
+Your agent searches, compares sources, and writes the answer. Chrome handles the pages that need a real browser. Browser Research connects the two over localhost and returns clean text with the final source URL.
 
-The current preview implements the rendered-tab path, shared broker, and macOS/Linux Native Messaging packaging. The faster extension-context `fetch()` tier remains follow-up work.
+Everything runs on the user's machine: the broker stays on localhost, the extension returns page text rather than cookie values, and access barriers stay barriers.
 
-## Build
+```text
+You:    Check whether Chrome changed its extension install policy this year.
+Agent:  Searching DuckDuckGo…
+        Reading 1 of 3 — developer.chrome.com
+        Reading 2 of 3 — chromium.org
+        ✓ Answer with citations
+```
 
-Requirements: Node 20.11+, pnpm, Chrome 116+.
+## Install twice. Pair once.
+
+The public install flow has three steps:
+
+1. Add **Browser Research** from the Chrome Web Store.
+2. Install the **Browser Research** plugin in Codex or Claude Code.
+3. Ask the agent to **“set up Browser Research”** and enter its one-time code in the extension.
+
+That is the whole user setup. The agent plugin starts the local MCP broker itself. Users do not clone this repository, install Native Messaging, download a second Chrome, enable Developer Mode, copy an extension ID, or paste a permanent token.
+
+> [!IMPORTANT]
+> The software and release packages are ready for store submission, but the Chrome, Codex, and Claude listings are not live yet. The website keeps their install buttons marked as pending until the approved URLs exist.
+
+## Where it helps
+
+| The page | What Browser Research does |
+| --- | --- |
+| Plain HTML | Fetches and extracts it without opening a tab |
+| JavaScript shell | Opens an inactive tab, waits for the DOM to settle, then extracts |
+| 401, 403, login, or challenge | Reports the barrier instead of pretending it read the page |
+| One source fails | Tries a replacement source and avoids hammering the same domain |
+| Search markup changes | Fails over from DuckDuckGo to Bing to Google |
+| Sources disagree | Keeps the claims separate and cites both sides |
+| Evidence is too thin | Returns `Research incomplete` instead of filling the gap from memory |
+
+A successful extension-context fetch avoids creating a tab. Rendered navigation is reserved for pages that prove they need it.
+
+## How it fits together
+
+```mermaid
+flowchart LR
+    A[Codex or Claude Code] -->|MCP over stdio| B[Bundled local plugin]
+    B -->|mutual authentication| C[Broker on 127.0.0.1]
+    C -->|paired extension origin| D[Browser Research for Chrome]
+    D --> E{Can static HTML answer it?}
+    E -->|yes| F[Extract without a tab]
+    E -->|no| G[Render in an inactive tab]
+    F --> H[Bounded text + final URL]
+    G --> H
+    H --> A
+```
+
+The first MCP launch creates a private 256-bit credential. Pairing uses a separate 64-bit code that expires after ten minutes and locks after five incorrect attempts. The extension sends a proof derived from the code, not the code itself. Once paired, the broker accepts only that exact Chrome extension origin.
+
+## Research behavior
+
+The bundled `$browse` and `/browse` workflows do more than call a page reader:
+
+- rank primary and official sources first;
+- search DuckDuckGo, then Bing, then Google when a provider fails;
+- retry one transient navigation failure;
+- replace blocked sources and quarantine repeatedly failing domains;
+- collapse canonical, duplicate, and syndicated results;
+- seek independent confirmation for consequential claims;
+- preserve disagreements instead of averaging them away;
+- stop when the material claims have enough evidence;
+- carry one deadline and cancellation signal across the whole run;
+- audit citation coverage before answering.
+
+Page text is always untrusted input. Instructions embedded in a website do not get to redirect the research task, request files, reveal secrets, or authorize more tools.
+
+## Security boundary
+
+Browser Research can read policy-allowed pages available to the Chrome profile where it is installed. That power is intentionally narrower than browser automation:
+
+- no click, type, submit, download, or form tool;
+- no cookie values, storage, history, or form-field values in agent output;
+- no CAPTCHA solving, stealth, fingerprint spoofing, or paywall bypass;
+- localhost and private network destinations fail closed;
+- requested and final hostnames are resolved and checked before extraction;
+- banking, healthcare, administration, email, and password-manager domains are denied by default;
+- captures and body-free audit records stay bounded and process-local;
+- no remote telemetry by default.
+
+The extension needs HTTP(S) site access to research without asking for an `activeTab` click on every page. Chrome can restrict that access to an allowlist. People who keep sensitive services signed in can use a separate low-privilege profile for a stronger boundary. Read the full [security policy](SECURITY.md) and [privacy policy](apps/site/app/privacy/page.tsx).
+
+## MCP tools
+
+| Tool | Purpose |
+| --- | --- |
+| `bridge_status` | Start/check the broker and provide the first-run pairing code |
+| `search_web` | Search through DuckDuckGo, Bing, or Google |
+| `fetch_rendered_page` | Read a public page through static fetch or rendered fallback |
+| `list_captures` / `read_capture` | Read bounded citation blocks from the current process |
+| `export_audit_report` | Export a body-free local research audit |
+| `delete_capture` / `clear_captures` / `clear_audit_log` | Explicit destructive maintenance, never pre-approved by the browse skill |
+
+## Distribution
+
+The repository produces three packages:
+
+- Chrome Web Store extension: `apps/chrome-extension/dist`
+- Codex plugin: `integrations/codex/browser-research`
+- Claude Code plugin: `integrations/claude/browser-research`
+
+The current Chrome upload archive is generated with `pnpm package:extension`. Publisher steps, permission copy, and the clean-machine release gate live in [DISTRIBUTION.md](DISTRIBUTION.md).
+
+## Maintainer setup
+
+These commands are for contributors and release maintainers, not product installation:
 
 ```sh
 pnpm install
 pnpm check
 ```
 
-Build outputs:
+`pnpm check` validates generated skills, runs the research-quality fixtures, typechecks every package, runs the protocol/extension/server suites, builds the site and release packages, and completes a built-artifact pairing test.
 
-- Chrome extension: `apps/chrome-extension/dist`
-- MCP server: `packages/mcp-server/dist/index.cjs`
-- Persistent broker: `packages/mcp-server/dist/broker.cjs`
-- Native Messaging relay: `packages/mcp-server/dist/native-host.cjs`
-- Packaged server copies under both `integrations/*/browser-research/server`
-
-## Automated browser acceptance test
-
-For development, launch an isolated Chrome profile with the unpacked extension and remote debugging enabled, then run:
+Useful commands:
 
 ```sh
-pnpm e2e:browser
+pnpm build                 # build the site, extension, MCP server, and plugins
+pnpm package:extension     # create the Chrome Web Store zip
+pnpm evaluate:research-quality
 ```
 
-The test discovers the extension ID without printing the generated token, configures the extension in the disposable profile, starts two independent stdio MCP clients, proves they share one auto-started broker, performs two parallel rendered fetches, and verifies concurrent SSRF regression URLs fail closed. `BROWSER_RESEARCH_CDP_PORT` and `BROWSER_RESEARCH_E2E_CONFIG` override the default test port and temporary config path.
+Requirements: Node 20.11+ and pnpm 10. The marketplace plugins currently launch their bundled server through `node`; a future platform package can bundle a runtime for machines without Node on `PATH`.
 
-With a configured browser already running, the representative-source suite is available as:
+## Release status
 
-```sh
-BROWSER_RESEARCH_E2E_CONFIG='/path/to/test-config.json' \
-pnpm --filter @browser-research/mcp-server e2e:sources
+The technical MVP is green: static fetch, rendered fallback, policy enforcement, cancellation, provider recovery, source-quality checks, pairing, plugin validation, and the clean built-package pairing flow all pass locally.
+
+Public availability still depends on three publisher reviews:
+
+- Chrome Web Store
+- Codex plugin directory
+- Claude Code marketplace
+
+The release is public-user ready when a clean machine completes this exact path without repository access:
+
+```text
+Add to Chrome → install agent plugin → ask to set up → enter code
+→ connected → search → static fetch → rendered fallback
 ```
 
-It verifies a static source, a rendered documentation source, a redirect, session-cookie continuity, access-denial detection, and a robots-restricted public source that can still be legitimately displayed in Chrome.
-
-The non-browser lifecycle acceptance test is included in `pnpm check`; it verifies idempotent setup, doctor, conservative uninstall, configuration retention, and complete removal in a disposable directory.
-
-## One-time Chrome setup
-
-1. Create a dedicated, low-privilege Chrome profile. This is a security requirement for the current preview, not an optional recommendation. Sign into only the sources this research agent should be allowed to read.
-2. Open `chrome://extensions`, enable Developer mode, choose **Load unpacked**, and select `apps/chrome-extension/dist`. Approve the requested site and Native Messaging permissions. The manifest also declares `dns` for an additional check available only in Chrome Dev/Chrome for Testing; Stable Chrome safely falls back to the broker check.
-3. Open the extension options. Copy the displayed extension ID.
-4. Run the setup command using the displayed extension ID:
-
-   ```sh
-   node scripts/browser-research.mjs setup \
-     --extension-id '<extension-id>' \
-     --browser chrome
-   ```
-
-   It generates or preserves a high-entropy token, writes `~/.config/browser-research/config.json` with private permissions, and installs the Native Messaging runtime. Paste the printed token into the extension options and save. The token is shown because this is the one value Chrome and the local harness must share; setup never logs it elsewhere.
-5. Run the installation doctor:
-
-   ```sh
-   node scripts/browser-research.mjs doctor --browser chrome
-   ```
-
-Supported browser values are `chrome`, `chrome-for-testing`, `chromium`, and `edge`. Native Messaging requires the token and extension ID in the default config file, or in a file explicitly pinned with `--config-path`; an environment-only MCP setup is insufficient because Chrome starts the host independently. Setup copies the host and broker beside Chrome's per-user manifest and writes a small launcher pinned to the current absolute Node path, avoiding both Chrome's minimal `PATH` and macOS Desktop-folder privacy restrictions. Re-run setup after changing the build or Node runtime.
-
-To remove the native host while keeping the configuration for a later reinstall:
-
-```sh
-node scripts/browser-research.mjs uninstall --browser chrome
-```
-
-Add `--remove-config` to remove the token-bearing configuration too. Uninstall validates the manifest and exact extension origin before removing its files and refuses unexpected targets.
-
-The MCP server reads that shared file by default, so installed Codex and Claude plugins do not depend on globally exported secrets. Set `BROWSER_RESEARCH_CONFIG` to use another path. Explicit `BROWSER_RESEARCH_TOKEN`, `BROWSER_RESEARCH_EXTENSION_ID`, and `BROWSER_RESEARCH_PORT` environment variables override file values for development and CI.
-
-The extension requests access to HTTP(S) sites because unattended rendering cannot rely on `activeTab`. Chrome shows this broad permission during installation. You can restrict its site access in Chrome, but autonomous calls outside those origins will then fail.
-
-## Run the MCP server directly
-
-```sh
-BROWSER_RESEARCH_TOKEN='<generated-token>' \
-BROWSER_RESEARCH_EXTENSION_ID='<extension-id>' \
-node packages/mcp-server/dist/index.cjs
-```
-
-The optional port defaults to `32189`. The extension first asks Chrome to start the allowlisted Native Messaging relay. That relay auto-starts the detached broker when needed and forwards only framed JSON between Chrome and the broker. If the host is not installed, the extension falls back to an authenticated loopback WebSocket. Later Codex and Claude sessions authenticate to and reuse the same broker, which exits ten minutes after the last MCP client disconnects. MCP clients reconnect and restart the broker after a mid-session broker failure. Compatibility is gated by the wire `PROTOCOL_VERSION`, so ordinary release upgrades can reuse a running compatible broker.
-
-## Codex
-
-The quickest development setup uses the built server directly:
-
-```sh
-codex mcp add browser-research \
-  --env BROWSER_RESEARCH_TOKEN='<generated-token>' \
-  --env BROWSER_RESEARCH_EXTENSION_ID='<extension-id>' \
-  -- node '/absolute/path/to/vebicrolly/packages/mcp-server/dist/index.cjs'
-```
-
-The installable Codex plugin is at `integrations/codex/browser-research`. Its manifest contains the bundled MCP definition directly, and the process reads the shared config file above.
-
-## Claude Code
-
-For local development, launch Claude Code with the plugin directory. It reads the same shared config file:
-
-```sh
-claude --plugin-dir ./integrations/claude/browser-research
-```
-
-Claude Code starts the plugin's stdio MCP server automatically. Use `/mcp` to inspect its connection.
-
-## Security model
-
-- Only public `http:` and `https:` URLs are accepted. Localhost, internal/reserved hostnames, wildcard loopback services, private/special IPv4 ranges, IPv4-mapped IPv6, and non-global IPv6 ranges are blocked. The broker resolves every requested fetch hostname and rejects it if any answer is non-public. Chrome Dev/Chrome for Testing additionally checks the single answer exposed by `chrome.dns` immediately before creating the initial tab. Stable Chrome, Edge, and Chromium do not expose that API and rely on the mandatory broker check.
-- Both loopback peer types use nonce-based HMAC-SHA-256 challenge-response. The broker proves token possession before the extension or MCP client responds, and the 256-bit token never crosses the socket. Extension connections additionally require the exact `chrome-extension://<id>` origin.
-- Research tabs are inactive, limited to two concurrent jobs, and closed in a `finally` block.
-- The persistent broker owns the global two-job ceiling, absolute job deadlines, and queue; additional jobs cannot outlive the requesting timeout or disappear with an MV3 worker suspension.
-- A 30-second `chrome.alarms` wake-up backs up the normal reconnect timer, allowing the MV3 worker to reconnect after an MCP process restarts.
-- The extractor removes forms, form controls, editable elements, scripts, styles, hidden elements, SVG, and canvas content.
-- MCP output is labeled `UNTRUSTED_WEB_CONTENT`, and the bundled skill tells the harness never to obey page instructions.
-- Page bodies live only in each requesting MCP process's memory; the store retains at most 50 captures and evicts the oldest first.
-
-The broker resolves the initial URL and re-resolves Chrome's final URL before extraction. The extension re-reads `tab.url` immediately before extraction and rejects any change. These checks prevent returning content from a destination that fails policy, but they are not an atomic network sandbox: Chrome can issue a redirect request before the final URL is known, and DNS can change between validation and navigation. The dedicated low-privilege Chrome profile is therefore the actual containment boundary.
-
-## Current limitations
-
-- Search-engine markup changes can break result extraction.
-- PDF viewers, canvas-only apps, browser-internal URLs, file URLs, and some cross-origin frames are unsupported.
-- A site may detect automation or disallow extraction even in a normal Chrome tab.
-- Login pages, CAPTCHA pages, access denials, and obvious challenges return errors instead of being bypassed.
-
-See [RESEARCH.md](./RESEARCH.md) for the full architecture and roadmap.
+Architecture and longer-term work are tracked in [RESEARCH.md](RESEARCH.md). The code is licensed under [Apache 2.0](LICENSE).

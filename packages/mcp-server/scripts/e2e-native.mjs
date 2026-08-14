@@ -31,6 +31,10 @@ let nativeError = "";
 native.stderr.on("data", (chunk) => { nativeError += chunk.toString(); });
 
 const nativeMessages = messageStream(native.stdout);
+const bootstrap = await nextWithTimeout(nativeMessages, 10_000);
+if (bootstrap.type !== "native_bootstrap_config" || bootstrap.extensionId !== extensionId || bootstrap.token !== token || bootstrap.port !== port) {
+  throw new Error(`Native relay did not provide the expected bootstrap config: ${JSON.stringify(bootstrap)} ${nativeError}`);
+}
 const challenge = await nextWithTimeout(nativeMessages, 10_000);
 if (challenge.type !== "auth_challenge" || challenge.channel !== "extension") {
   throw new Error(`Native relay did not receive broker challenge: ${JSON.stringify(challenge)} ${nativeError}`);
@@ -102,7 +106,7 @@ try {
   const parsed = JSON.parse(toolText(fetched));
   if (parsed.title !== "Native relay acceptance") throw new Error(`Unexpected fetch result: ${toolText(fetched)}`);
 
-  process.stdout.write(`${JSON.stringify({ nativeAuth: true, brokerConnected: true, mcpRoundTrip: true, port }, null, 2)}\n`);
+  process.stdout.write(`${JSON.stringify({ nativeBootstrap: true, nativeAuth: true, brokerConnected: true, mcpRoundTrip: true, port }, null, 2)}\n`);
 } finally {
   await client.close().catch(() => undefined);
   native.kill("SIGTERM");

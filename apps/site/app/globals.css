@@ -158,6 +158,7 @@ h1.headline .em { color: var(--accent-strong); }
 .btn-primary:hover { background: var(--accent-strong); }
 .btn-ghost { background: transparent; color: var(--ink); border-color: var(--hairline-strong); }
 .btn-ghost:hover { background: var(--surface-2); }
+.btn-disabled { opacity: 0.62; cursor: default; }
 .hero-meta { margin-top: 1.6rem; font-size: 0.82rem; color: var(--faint); font-family: var(--mono); display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; }
 .hero-meta span { display: inline-flex; align-items: center; gap: 0.4rem; }
 .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--allow); box-shadow: 0 0 0 3px color-mix(in srgb, var(--allow) 20%, transparent); }
@@ -249,6 +250,12 @@ h2 { font-family: var(--mono); font-weight: 600; font-size: clamp(1.5rem, 3.2vw,
 .step code, .inline-code { font-family: var(--mono); font-size: 0.85em; background: var(--surface-2); padding: 0.12em 0.4em; border-radius: 4px; color: var(--ink); }
 .callout { margin-top: 2rem; border: 1px dashed var(--hairline-strong); border-radius: 10px; padding: 1rem 1.2rem; font-size: 0.9rem; color: var(--muted); background: var(--accent-wash); }
 .callout b { color: var(--ink); font-family: var(--mono); font-size: 0.85rem; }
+.distribution-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: 2rem; border: 1px solid var(--hairline); border-radius: 10px; overflow: hidden; background: var(--hairline); }
+.distribution-link { display: flex; flex-direction: column; gap: .55rem; padding: 1.1rem; background: var(--surface); }
+.distribution-link strong { font-family: var(--mono); font-size: .9rem; }
+.distribution-link a, .distribution-link span { color: var(--muted); font-size: .86rem; }
+.distribution-link a { color: var(--accent-strong); }
+@media (max-width: 680px) { .distribution-grid { grid-template-columns: 1fr; } }
 
 .cmd { display: flex; align-items: stretch; gap: 0; margin: 1.6rem 0 0; border: 1px solid var(--hairline-strong); border-radius: 8px; overflow: hidden; background: var(--surface); font-family: var(--mono); }
 .cmd code { padding: 0.75rem 1rem; font-size: 0.86rem; overflow-x: auto; white-space: nowrap; flex: 1; color: var(--ink); }
@@ -272,3 +279,11 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 1rem 2rem; justify-content: 
 footer nav { display: flex; flex-wrap: wrap; gap: 1.2rem; font-family: var(--mono); font-size: 0.82rem; }
 footer nav a { color: var(--muted); }
 footer .note { max-width: 40ch; line-height: 1.5; }
+
+/* ---- policy pages ---- */
+.legal { max-width: 760px; padding-top: 4rem; padding-bottom: 5rem; }
+.legal h1 { font-family: var(--mono); font-size: clamp(2.2rem, 7vw, 4rem); letter-spacing: -.04em; margin: .4rem 0 .5rem; }
+.legal h2 { margin-top: 2.2rem; font-size: 1.2rem; }
+.legal p { color: var(--muted); line-height: 1.7; }
+.legal .legal-date { color: var(--faint); font-family: var(--mono); font-size: .85rem; }
+.legal-back { display: inline-block; margin-top: 2.5rem; font-family: var(--mono); }

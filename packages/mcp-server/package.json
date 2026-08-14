@@ -12,6 +12,7 @@
     "e2e:concurrent": "node scripts/e2e-concurrent.mjs",
     "e2e:sources": "node scripts/e2e-sources.mjs",
     "e2e:native": "node scripts/e2e-native.mjs",
+    "e2e:pairing": "node scripts/e2e-pairing.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

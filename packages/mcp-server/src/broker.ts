@@ -9,18 +9,22 @@ import {
   hmacSha256Hex,
   serverProofPayload
 } from "@browser-research/protocol";
-import { BROKER_BUILD_ID, BROKER_VERSION, BrokerRequestSchema } from "./broker-protocol.js";
-import { loadServerConfig } from "./config.js";
+import { BROKER_BUILD_ID, BROKER_VERSION, BrokerCancelSchema, BrokerRequestSchema } from "./broker-protocol.js";
+import { loadServerConfig, persistPairedExtension } from "./config.js";
 import { assertPublicResolvedUrl } from "./dns-policy.js";
 
 const clients = new Set<WebSocket>();
+const activeRequests = new Map<WebSocket, Map<string, AbortController>>();
 let bridge: BrowserBridge;
 let config: Awaited<ReturnType<typeof loadServerConfig>>;
 let idleTimer: NodeJS.Timeout | undefined;
 
 async function main(): Promise<void> {
   config = await loadServerConfig();
-  bridge = new BrowserBridge(config);
+  bridge = new BrowserBridge({
+    ...config,
+    onPaired: async (extensionId) => persistPairedExtension(config, extensionId)
+  });
   bridge.onBrokerConnection = authenticateBrokerClient;
   await bridge.ready;
   process.stderr.write(`Browser Research broker running on 127.0.0.1:${bridge.port}\n`);
@@ -73,6 +77,7 @@ function authenticateBrokerClient({ socket }: BrokerConnection): void {
       authenticated = true;
       clearTimeout(authTimer);
       clients.add(socket);
+      activeRequests.set(socket, new Map());
       bridge.setBrokerClientCount(clients.size);
       if (idleTimer) clearTimeout(idleTimer);
       idleTimer = undefined;
@@ -83,6 +88,12 @@ function authenticateBrokerClient({ socket }: BrokerConnection): void {
         serverVersion: BROKER_VERSION,
         serverBuildId: BROKER_BUILD_ID
       }));
+      return;
+    }
+
+    const cancellation = BrokerCancelSchema.safeParse(input);
+    if (cancellation.success) {
+      activeRequests.get(socket)?.get(cancellation.data.id)?.abort();
       return;
     }
 
@@ -97,6 +108,8 @@ function authenticateBrokerClient({ socket }: BrokerConnection): void {
   socket.on("close", () => {
     clearTimeout(authTimer);
     clients.delete(socket);
+    for (const controller of activeRequests.get(socket)?.values() ?? []) controller.abort();
+    activeRequests.delete(socket);
     bridge.setBrokerClientCount(clients.size);
     scheduleIdleShutdown();
   });
@@ -110,21 +123,32 @@ function scheduleIdleShutdown(): void {
 }
 
 async function handleRequest(socket: WebSocket, request: ReturnType<typeof BrokerRequestSchema.parse>): Promise<void> {
+  const controller = request.operation === "run_job" ? new AbortController() : undefined;
+  if (controller) activeRequests.get(socket)?.set(request.id, controller);
   try {
     if (request.operation === "run_job" && request.job.kind === "fetch_rendered_page") {
       await assertPublicResolvedUrl(request.job.url);
     }
+    if (controller?.signal.aborted) return;
     const result = request.operation === "status"
       ? bridge.getStatus()
-      : await bridge.runJob(request.job, (event) => send(socket, { type: "broker_progress", id: request.id, event }));
+      : await bridge.runJob(
+        request.job,
+        (event) => send(socket, { type: "broker_progress", id: request.id, event }),
+        controller?.signal
+      );
+    if (controller?.signal.aborted) return;
     send(socket, { type: "broker_response", id: request.id, ok: true, result });
   } catch (error) {
+    if (controller?.signal.aborted) return;
     send(socket, {
       type: "broker_response",
       id: request.id,
       ok: false,
       error: { code: "broker_error", message: error instanceof Error ? error.message : String(error) }
     });
+  } finally {
+    if (controller) activeRequests.get(socket)?.delete(request.id);
   }
 }
 

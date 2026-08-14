@@ -38,11 +38,14 @@ try {
   const statusText = statusResult?.content?.find?.((item) => item?.type === "text")?.text;
   if (typeof statusText !== "string") throw new Error("bridge_status returned no text content");
   const status = JSON.parse(statusText);
-  const expectedBuildId = "browser-research-0.4.0-auth-v2";
+  const expectedBuildId = "browser-research-0.4.0-pairing-v3";
   if (status.brokerBuildId !== expectedBuildId) {
     throw new Error(`Broker runtime is stale: expected ${expectedBuildId}, got ${status.brokerBuildId ?? "unknown"}`);
   }
-  process.stdout.write("ok\n");
+  if (process.env.BROWSER_RESEARCH_REQUIRE_EXTENSION === "1" && status.connected !== true) {
+    throw new Error("Browser Research extension is not connected");
+  }
+  process.stdout.write(`${JSON.stringify({ ok: true, extensionConnected: status.connected === true, brokerBuildId: status.brokerBuildId })}\n`);
 } catch (error) {
   process.stderr.write(`${error instanceof Error ? error.message : String(error)}${stderr ? `\n${stderr}` : ""}\n`);
   process.exitCode = 1;

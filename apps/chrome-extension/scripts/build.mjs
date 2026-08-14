@@ -11,6 +11,7 @@ await mkdir(dist, { recursive: true });
 await build({
   entryPoints: {
     "service-worker": resolve(root, "src/service-worker.ts"),
+    "static-extractor": resolve(root, "src/static-extractor.ts"),
     extractor: resolve(root, "src/extractor.ts"),
     options: resolve(root, "src/options.ts")
   },
@@ -25,6 +26,8 @@ await build({
 
 await Promise.all([
   cp(resolve(root, "static/manifest.json"), resolve(dist, "manifest.json")),
+  cp(resolve(root, "static/offscreen.html"), resolve(dist, "offscreen.html")),
   cp(resolve(root, "static/options.html"), resolve(dist, "options.html")),
-  cp(resolve(root, "static/options.css"), resolve(dist, "options.css"))
+  cp(resolve(root, "static/options.css"), resolve(dist, "options.css")),
+  ...[16, 32, 48, 128].map((size) => cp(resolve(root, `static/icon-${size}.png`), resolve(dist, `icon-${size}.png`)))
 ]);

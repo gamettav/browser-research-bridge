@@ -2,9 +2,9 @@
   "name": "browser-research",
   "displayName": "Browser Research",
   "version": "0.4.0",
-  "description": "Read rendered public web pages through a configured local Chrome profile.",
+  "description": "Research public web pages through the paired Browser Research Chrome extension.",
   "author": {
-    "name": "Local developer"
+    "name": "Browser Research"
   },
   "keywords": ["research", "browser", "mcp", "web"]
 }

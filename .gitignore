@@ -2,6 +2,9 @@ node_modules/
 dist/
 .DS_Store
 coverage/
+artifacts/
+.pnpm-store/
+.worktrees/
 *.log
 /config.json
 integrations/codex/browser-research/server/

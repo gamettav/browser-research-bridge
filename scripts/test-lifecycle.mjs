@@ -1,4 +1,4 @@
-import { appendFile, mkdtemp, readFile, stat, writeFile } from "node:fs/promises";
+import { appendFile, chmod, mkdir, mkdtemp, readFile, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -12,6 +12,50 @@ const port = 50000 + Math.floor(Math.random() * 10_000);
 const command = resolve(root, "scripts/browser-research.mjs");
 const hostPath = resolve(root, "packages/mcp-server/dist/native-host.cjs");
 const common = ["--extension-id", extensionId, "--config-path", configPath, "--manifest-dir", manifestDir, "--port", String(port)];
+
+const automaticRoot = join(temporary, "automatic");
+const automaticConfig = join(automaticRoot, "config.json");
+const automaticProfile = join(automaticRoot, "profile");
+const automaticManifestDir = join(automaticProfile, "NativeMessagingHosts");
+const automaticLauncher = join(automaticRoot, "browser-research-browser");
+const fakeBrowser = join(automaticRoot, "fake-browser");
+await mkdir(automaticRoot, { recursive: true });
+await writeFile(fakeBrowser, "#!/bin/sh\nexit 0\n", { mode: 0o700 });
+await chmod(fakeBrowser, 0o700);
+const automaticInstall = run(
+  "install",
+  "--config-path", automaticConfig,
+  "--profile-dir", automaticProfile,
+  "--launcher-path", automaticLauncher,
+  "--browser-path", fakeBrowser,
+  "--extension-path", resolve(root, "apps/chrome-extension/dist"),
+  "--host-path", hostPath,
+  "--port", String(port + 1),
+  "--no-launch"
+);
+const automatic = JSON.parse(await readFile(automaticConfig, "utf8"));
+if (automatic.extensionId !== "acmkjncjhgcjjlbbfdiehainmlkdgipd") throw new Error("Automatic install did not derive the stable extension ID");
+if (automatic.token?.length !== 64) throw new Error("Automatic install did not generate the bridge credential");
+if (automatic.browser !== "chrome-for-testing") throw new Error("Automatic install did not select the supported dedicated browser");
+if (automaticInstall.stdout.includes(automatic.token)) throw new Error("Automatic install printed the bridge credential");
+if (automatic.extensionPath !== join(automaticManifestDir, "browser-research-host", "extension")) throw new Error("Automatic install did not pin its managed extension copy");
+await readFile(join(automatic.extensionPath, "manifest.json"), "utf8");
+const automaticLauncherContents = await readFile(automaticLauncher, "utf8");
+if (!automaticLauncherContents.includes("--load-extension=") || !automaticLauncherContents.includes("--user-data-dir=")) {
+  throw new Error("Automatic install did not create a dedicated extension-enabled browser launcher");
+}
+const automaticDoctor = run(
+  "doctor",
+  "--config-path", automaticConfig,
+  "--host-path", hostPath
+);
+if (!automaticDoctor.stdout.toLowerCase().includes("configuration is automatic")) throw new Error("Doctor did not recognize the automatic installation");
+run("uninstall", "--config-path", automaticConfig);
+await expectMissing(join(automaticManifestDir, "com.browser_research.bridge.json"));
+await expectMissing(automaticLauncher);
+await readFile(automaticConfig, "utf8");
+run("uninstall", "--config-path", automaticConfig, "--remove-config");
+await expectMissing(automaticConfig);
 
 run("setup", ...common, "--host-path", hostPath);
 const first = JSON.parse(await readFile(configPath, "utf8"));
@@ -44,7 +88,7 @@ await readFile(configPath, "utf8");
 run("uninstall", ...common, "--remove-config");
 await expectMissing(configPath);
 
-process.stdout.write(`${JSON.stringify({ setup: true, idempotent: true, doctor: true, staleRuntimeDetected: true, brokenNodeDetected: true, uninstall: true }, null, 2)}\n`);
+process.stdout.write(`${JSON.stringify({ automaticInstall: true, stableExtensionId: true, noTokenPaste: true, automaticUninstall: true, setup: true, idempotent: true, doctor: true, staleRuntimeDetected: true, brokenNodeDetected: true, uninstall: true }, null, 2)}\n`);
 
 function run(...args) {
   const result = spawnSync(process.execPath, [command, ...args], { encoding: "utf8" });

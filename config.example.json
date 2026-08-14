@@ -1,6 +1,42 @@
 {
-  "token": "run-setup-to-generate-a-64-character-lowercase-hex-token",
-  "extensionId": "replace-with-the-id-from-the-extension-options-page",
   "port": 32189,
-  "brokerIdleMs": 600000
+  "brokerIdleMs": 600000,
+  "domainAllowlist": [],
+  "domainDenylist": [],
+  "sensitiveDomainDenylist": [
+    "account.proton.me",
+    "admin.google.com",
+    "admin.microsoft.com",
+    "mail.google.com",
+    "mail.proton.me",
+    "my.1password.com",
+    "outlook.live.com",
+    "outlook.office.com",
+    "vault.bitwarden.com"
+  ],
+  "allowAuthenticatedSources": false,
+  "maxPagesPerSession": 50,
+  "maxConcurrentFetches": 4,
+  "maxExtractedChars": 500000,
+  "redactedUrlParameters": [
+    "access_token",
+    "api_key",
+    "apikey",
+    "auth",
+    "authorization",
+    "code",
+    "credential",
+    "jwt",
+    "key",
+    "password",
+    "secret",
+    "session",
+    "sessionid",
+    "signature",
+    "state",
+    "token"
+  ],
+  "captureRetentionCount": 50,
+  "captureRetentionMs": 0,
+  "doNotRetain": false
 }

@@ -14,6 +14,9 @@ importers:
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
+      yaml:
+        specifier: ^2.6.1
+        version: 2.9.0
 
   apps/chrome-extension:
     dependencies:
@@ -38,7 +41,7 @@ importers:
         version: 0.25.12
       vitest:
         specifier: ^3.2.4
-        version: 3.2.7(@types/node@22.20.1)
+        version: 3.2.7(@types/node@22.20.1)(yaml@2.9.0)
 
   apps/site:
     dependencies:
@@ -88,7 +91,7 @@ importers:
         version: 0.25.12
       vitest:
         specifier: ^3.2.4
-        version: 3.2.7(@types/node@22.20.1)
+        version: 3.2.7(@types/node@22.20.1)(yaml@2.9.0)
 
   packages/protocol:
     dependencies:
@@ -98,7 +101,7 @@ importers:
     devDependencies:
       vitest:
         specifier: ^3.2.4
-        version: 3.2.7(@types/node@22.20.1)
+        version: 3.2.7(@types/node@22.20.1)(yaml@2.9.0)
 
 packages:
 
@@ -1484,6 +1487,11 @@ packages:
       utf-8-validate:
         optional: true
 
+  yaml@2.9.0:
+    resolution: {integrity: sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA==}
+    engines: {node: '>= 14.6'}
+    hasBin: true
+
   zod-to-json-schema@3.25.2:
     resolution: {integrity: sha512-O/PgfnpT1xKSDeQYSCfRI5Gy3hPf91mKVDuYLUHZJMiDFptvP41MSnWofm8dnCm0256ZNfZIM7DSzuSMAFnjHA==}
     peerDependencies:
@@ -1940,13 +1948,13 @@ snapshots:
       chai: 5.3.3
       tinyrainbow: 2.0.0
 
-  '@vitest/mocker@3.2.7(vite@7.3.6(@types/node@22.20.1))':
+  '@vitest/mocker@3.2.7(vite@7.3.6(@types/node@22.20.1)(yaml@2.9.0))':
     dependencies:
       '@vitest/spy': 3.2.7
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 7.3.6(@types/node@22.20.1)
+      vite: 7.3.6(@types/node@22.20.1)(yaml@2.9.0)
 
   '@vitest/pretty-format@3.2.7':
     dependencies:
@@ -2602,13 +2610,13 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vite-node@3.2.4(@types/node@22.20.1):
+  vite-node@3.2.4(@types/node@22.20.1)(yaml@2.9.0):
     dependencies:
       cac: 6.7.14
       debug: 4.4.3
       es-module-lexer: 1.7.0
       pathe: 2.0.3
-      vite: 7.3.6(@types/node@22.20.1)
+      vite: 7.3.6(@types/node@22.20.1)(yaml@2.9.0)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -2623,7 +2631,7 @@ snapshots:
       - tsx
       - yaml
 
-  vite@7.3.6(@types/node@22.20.1):
+  vite@7.3.6(@types/node@22.20.1)(yaml@2.9.0):
     dependencies:
       esbuild: 0.28.2
       fdir: 6.5.0(picomatch@4.0.5)
@@ -2634,12 +2642,13 @@ snapshots:
     optionalDependencies:
       '@types/node': 22.20.1
       fsevents: 2.3.3
+      yaml: 2.9.0
 
-  vitest@3.2.7(@types/node@22.20.1):
+  vitest@3.2.7(@types/node@22.20.1)(yaml@2.9.0):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/expect': 3.2.7
-      '@vitest/mocker': 3.2.7(vite@7.3.6(@types/node@22.20.1))
+      '@vitest/mocker': 3.2.7(vite@7.3.6(@types/node@22.20.1)(yaml@2.9.0))
       '@vitest/pretty-format': 3.2.7
       '@vitest/runner': 3.2.7
       '@vitest/snapshot': 3.2.7
@@ -2657,8 +2666,8 @@ snapshots:
       tinyglobby: 0.2.17
       tinypool: 1.1.1
       tinyrainbow: 2.0.0
-      vite: 7.3.6(@types/node@22.20.1)
-      vite-node: 3.2.4(@types/node@22.20.1)
+      vite: 7.3.6(@types/node@22.20.1)(yaml@2.9.0)
+      vite-node: 3.2.4(@types/node@22.20.1)(yaml@2.9.0)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.20.1
@@ -2688,6 +2697,8 @@ snapshots:
   wrappy@1.0.2: {}
 
   ws@8.21.3: {}
+
+  yaml@2.9.0: {}
 
   zod-to-json-schema@3.25.2(zod@3.25.76):
     dependencies:

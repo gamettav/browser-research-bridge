@@ -3,9 +3,13 @@ import { WebSocket } from "ws";
 import {
   AuthChallengeSchema,
   BRIDGE_BUILD_ID,
+  PairingOkSchema,
+  PairingRequiredSchema,
   PROTOCOL_VERSION,
   clientProofPayload,
-  hmacSha256Hex
+  hmacSha256Hex,
+  pairingProofHex,
+  pairingSubmitPayload
 } from "@browser-research/protocol";
 import { BrowserBridge } from "../src/bridge.js";
 
@@ -49,6 +53,7 @@ describe("BrowserBridge", () => {
     });
 
     await opened(socket);
+    sendHello(socket, true);
     const challenge = AuthChallengeSchema.parse(await waitForMessage(messages, "auth_challenge"));
     socket.send(JSON.stringify({
       type: "auth_response",
@@ -117,6 +122,35 @@ describe("BrowserBridge", () => {
     socket.close();
   });
 
+  it("removes a cancelled queued job without disturbing running jobs", async () => {
+    bridge = new BrowserBridge({ token, extensionId, port: 0 });
+    await bridge.ready;
+    const socket = new WebSocket(`ws://127.0.0.1:${bridge.port}`, { origin: `chrome-extension://${extensionId}` });
+    const messages: Array<Record<string, unknown>> = [];
+    socket.on("message", (data) => messages.push(JSON.parse(data.toString()) as Record<string, unknown>));
+
+    await opened(socket);
+    await authenticateExtension(socket, messages);
+    const searchJob = { kind: "search_web" as const, query: "q", provider: "duckduckgo" as const, limit: 10, timeoutMs: 5_000 };
+    const first = bridge.runJob(searchJob);
+    const second = bridge.runJob(searchJob);
+    await waitFor(() => messages.filter((message) => message.type === "job").length === 2);
+
+    const controller = new AbortController();
+    const queued = bridge.runJob(searchJob, undefined, controller.signal);
+    controller.abort();
+    await expect(queued).rejects.toMatchObject({ name: "AbortError" });
+    expect(bridge.getStatus().pendingJobs).toBe(2);
+    expect(messages.filter((message) => message.type === "job")).toHaveLength(2);
+
+    for (const message of messages.filter((candidate) => candidate.type === "job")) {
+      socket.send(JSON.stringify(successfulSearchResult(String(message.id))));
+    }
+    await expect(Promise.all([first, second])).resolves.toHaveLength(2);
+    expect(bridge.getStatus().pendingJobs).toBe(0);
+    socket.close();
+  });
+
   it("rejects connections from the wrong extension origin", async () => {
     bridge = new BrowserBridge({ token, extensionId, port: 0 });
     await bridge.ready;
@@ -150,6 +184,7 @@ describe("BrowserBridge", () => {
     const messages: unknown[] = [];
     socket.on("message", (data) => messages.push(JSON.parse(data.toString())));
     await opened(socket);
+    sendHello(socket, true);
     const challenge = AuthChallengeSchema.parse(await waitForMessage(messages, "auth_challenge"));
     expect(JSON.stringify(challenge)).not.toContain(token);
     const wrongToken = "b".repeat(64);
@@ -183,6 +218,38 @@ describe("BrowserBridge", () => {
       .toMatchObject({ ok: false, error: { code: "blocked_navigation" } });
     socket.close();
   });
+
+  it("pairs a fresh Web Store extension without sending the code over loopback", async () => {
+    let pairedExtensionId: string | null = null;
+    bridge = new BrowserBridge({
+      token,
+      extensionId: null,
+      port: 0,
+      onPaired: async (value) => { pairedExtensionId = value; }
+    });
+    await bridge.ready;
+    const socket = new WebSocket(`ws://127.0.0.1:${bridge.port}`, { origin: `chrome-extension://${extensionId}` });
+    const messages: unknown[] = [];
+    socket.on("message", (data) => messages.push(JSON.parse(data.toString())));
+    await opened(socket);
+    sendHello(socket, false);
+
+    const required = PairingRequiredSchema.parse(await waitForMessage(messages, "pairing_required"));
+    const pairingCode = bridge.getStatus().pairingCode!;
+    const submit = {
+      type: "pairing_submit",
+      nonce: required.nonce,
+      proof: await pairingProofHex(pairingCode, pairingSubmitPayload(required.nonce, extensionId, PROTOCOL_VERSION))
+    };
+    expect(JSON.stringify(submit)).not.toContain(pairingCode);
+    socket.send(JSON.stringify(submit));
+
+    const paired = PairingOkSchema.parse(await waitForMessage(messages, "pairing_ok"));
+    expect(paired.token).toBe(token);
+    expect(pairedExtensionId).toBe(extensionId);
+    expect(bridge.getStatus().expectedOrigin).toBe(`chrome-extension://${extensionId}`);
+    socket.close();
+  });
 });
 
 function opened(socket: WebSocket): Promise<void> {
@@ -206,6 +273,7 @@ async function waitForMessage(messages: unknown[], type: string): Promise<unknow
 }
 
 async function authenticateExtension(socket: WebSocket, messages: unknown[]): Promise<void> {
+  sendHello(socket, true);
   const challenge = AuthChallengeSchema.parse(await waitForMessage(messages, "auth_challenge"));
   socket.send(JSON.stringify({
     type: "auth_response",
@@ -220,6 +288,34 @@ async function authenticateExtension(socket: WebSocket, messages: unknown[]): Pr
   await waitFor(() => messages.some((message) => isRecord(message) && message.type === "auth_ok"));
 }
 
+function sendHello(socket: WebSocket, hasToken: boolean): void {
+  socket.send(JSON.stringify({
+    type: "extension_hello",
+    extensionId,
+    hasToken,
+    clientVersion: "0.4.0",
+    clientBuildId: BRIDGE_BUILD_ID
+  }));
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
+}
+
+function successfulSearchResult(id: string) {
+  return {
+    type: "job_result",
+    id,
+    ok: true,
+    result: {
+      kind: "search",
+      query: "q",
+      provider: "duckduckgo",
+      finalUrl: "https://duckduckgo.com/?q=q",
+      results: [],
+      capturedAt: new Date().toISOString(),
+      challenge: false,
+      challengeKind: null
+    }
+  };
 }

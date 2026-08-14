@@ -1,5 +1,6 @@
 import { Readability } from "@mozilla/readability";
 import TurndownService from "turndown";
+import { classifyChallengeText } from "./fast-fetch.js";
 
 type ExtractPageMessage = { type: "extract_page"; requestedUrl: string; maxChars: number };
 type ExtractSearchMessage = {
@@ -35,7 +36,7 @@ function extractPage(message: ExtractPageMessage) {
   const links = extractLinks(300);
   const canonicalUrl = absoluteUrl(document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href ?? null);
   const title = article?.title?.trim() || document.title.trim() || location.hostname;
-  const challengeKind = classifyChallenge(title, fallbackText);
+  const challengeKind = classifyChallengeText(title, fallbackText);
 
   return {
     kind: "page",
@@ -70,7 +71,7 @@ function extractSearch(message: ExtractSearchMessage) {
     if (results.length >= message.limit) break;
   }
 
-  const challengeKind = classifyChallenge(document.title, visibleBodyText());
+  const challengeKind = classifyChallengeText(document.title, visibleBodyText());
 
   return {
     kind: "search",
@@ -175,23 +176,6 @@ function isSearchEngineInternal(url: string, provider: ExtractSearchMessage["pro
   if (provider === "google") return host === "google.com" || host.endsWith(".google.com");
   if (provider === "bing") return host === "bing.com" || host.endsWith(".bing.com");
   return host === "duckduckgo.com" || host.endsWith(".duckduckgo.com");
-}
-
-type ChallengeKind = "captcha" | "login" | "denied" | null;
-
-function classifyChallenge(title: string, text: string): ChallengeKind {
-  const sample = `${title}\n${text.slice(0, 5_000)}`.toLowerCase();
-  const has = (signals: string[]): boolean => signals.some((signal) => sample.includes(signal));
-  if (has(["verify you are human", "checking your browser", "captcha", "attention required", "unusual traffic", "enable javascript and cookies"])) {
-    return "captcha";
-  }
-  if (has(["sign in to continue", "log in to continue", "please sign in", "please log in", "you must be logged in"])) {
-    return "login";
-  }
-  if (has(["access denied", "403 forbidden", "you don't have permission", "you do not have permission"])) {
-    return "denied";
-  }
-  return null;
 }
 
 function normalizeMarkdown(markdown: string): string {

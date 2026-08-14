@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { access, chmod, copyFile, mkdir, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { access, chmod, copyFile, cp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { constants } from "node:fs";
 import { homedir, platform } from "node:os";
 import { dirname, isAbsolute, resolve } from "node:path";
@@ -26,9 +27,18 @@ const launcherPath = resolve(manifestDir, HOST_NAME);
 const runtimeDir = resolve(manifestDir, "browser-research-host");
 const installedHostPath = resolve(runtimeDir, "native-host.cjs");
 const installedBrokerPath = resolve(runtimeDir, "broker.cjs");
+const installedExtensionPath = resolve(runtimeDir, "extension");
 await mkdir(runtimeDir, { recursive: true, mode: 0o700 });
 await copyFile(hostPath, installedHostPath);
 await copyFile(brokerPath, installedBrokerPath);
+if (args.extensionPath) {
+  const extensionPath = resolve(args.extensionPath);
+  const manifest = JSON.parse(await readFile(resolve(extensionPath, "manifest.json"), "utf8"));
+  if (extensionIdFromKey(manifest.key) !== args.extensionId) {
+    fail("Extension manifest key does not match --extension-id");
+  }
+  await cp(extensionPath, installedExtensionPath, { recursive: true, force: true });
+}
 await chmod(installedHostPath, 0o600);
 await chmod(installedBrokerPath, 0o600);
 const configLine = configPath ? `export BROWSER_RESEARCH_CONFIG=${shellQuote(configPath)}\n` : "";
@@ -45,6 +55,7 @@ const manifest = {
 await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, { mode: 0o600 });
 await chmod(manifestPath, 0o600);
 process.stdout.write(`Installed ${HOST_NAME}\nManifest: ${manifestPath}\nLauncher: ${launcherPath}\nHost: ${installedHostPath}\n`);
+if (args.extensionPath) process.stdout.write(`Extension: ${installedExtensionPath}\n`);
 
 function resolveHostPath(value, base) {
   if (value) {
@@ -81,11 +92,21 @@ function parseArgs(input) {
     else if (key === "--host-path") result.hostPath = value;
     else if (key === "--manifest-dir") result.manifestDir = value;
     else if (key === "--config-path") result.configPath = value;
+    else if (key === "--extension-path") result.extensionPath = value;
     else if (key === "--browser") result.browser = value;
     else fail(`Unknown argument: ${key}`);
     index += 1;
   }
   return result;
+}
+
+function extensionIdFromKey(value) {
+  if (typeof value !== "string" || value.length < 100) fail("Extension manifest is missing its stable public key");
+  const digest = createHash("sha256").update(Buffer.from(value, "base64")).digest().subarray(0, 16);
+  return [...digest]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("")
+    .replace(/[0-9a-f]/g, (character) => String.fromCharCode(97 + Number.parseInt(character, 16)));
 }
 
 function separator() {

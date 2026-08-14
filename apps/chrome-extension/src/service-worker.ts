@@ -7,6 +7,9 @@ import {
   HeartbeatAckSchema,
   JobMessageSchema,
   NavigationCheckResultSchema,
+  PairingErrorSchema,
+  PairingOkSchema,
+  PairingRequiredSchema,
   PROTOCOL_VERSION,
   ProtocolErrorSchema,
   clientProofPayload,
@@ -14,31 +17,51 @@ import {
   hmacSha256Hex,
   isAllowedPublicWebUrl,
   isValidBridgeToken,
+  isValidPairingCode,
+  normalizePairingCode,
+  pairingOkPayload,
+  pairingProofHex,
+  pairingSubmitPayload,
   safeDomain,
   serverProofPayload,
   type BrowserJob,
   type ResearchPhase
 } from "@browser-research/protocol";
 import { unwrapExtractionResult } from "./extraction-result.js";
+import {
+  canonicalFetchKey,
+  classifyFastFetchResponse,
+  DomainCompatibilityMemory,
+  domSnapshotsAreStable,
+  type DomSnapshot,
+  type FastFetchFallbackReason
+} from "./fast-fetch.js";
 import { assertNavigationUrl, type DnsResolve } from "./navigation-policy.js";
 
 type BridgeConfig = { token: string; port: number };
 type BrowserError = { code: string; message: string };
 type PhaseEmitter = (phase: ResearchPhase, domain: string | null) => void;
 type BridgeTransport = {
-  kind: "native" | "websocket";
+  kind: "websocket";
   isOpen: () => boolean;
   send: (message: unknown) => void;
   close: () => void;
 };
+type StaticFetchPayload = { status: number; contentType: string | null; finalUrl: string; body: string };
 
 let transport: BridgeTransport | null = null;
+let activeConfig: BridgeConfig | null = null;
 let heartbeat: number | null = null;
 let reconnectTimer: number | null = null;
 let reconnectAttempt = 0;
 const pendingNavigationChecks = new Map<string, { resolve: () => void; reject: (error: Error) => void; timer: number }>();
+const inFlightStaticFetches = new Map<string, Promise<StaticFetchPayload>>();
+const fastFetchCompatibility = new DomainCompatibilityMemory();
 const RECONNECT_ALARM = "browser-research-reconnect";
-const NATIVE_HOST_NAME = "com.browser_research.bridge";
+const MAX_STATIC_BODY_BYTES = 5_000_000;
+const STATIC_FETCH_TIMEOUT_MS = 12_000;
+let creatingOffscreenDocument: Promise<void> | null = null;
+let pendingPairing: { nonce: string; code: string | null } | null = null;
 
 chrome.runtime.onInstalled.addListener(() => {
   scheduleReconnectAlarm();
@@ -54,11 +77,22 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === RECONNECT_ALARM) void connect();
 });
 
-chrome.runtime.onMessage.addListener((message, sender) => {
-  if (message?.type === "config_updated" && sender.id === chrome.runtime.id && sender.url === chrome.runtime.getURL("options.html")) {
-    reconnectAttempt = 0;
-    transport?.close();
-    void connect();
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (sender.id !== chrome.runtime.id || sender.url !== chrome.runtime.getURL("options.html")) return;
+  if (message?.type === "pairing_submit") {
+    void submitPairingCode(String(message.code ?? "")).then(sendResponse);
+    return true;
+  }
+  if (message?.type === "pair_again") {
+    void chrome.storage.local.remove(["token", "pairingState"]).then(() => {
+      activeConfig = null;
+      pendingPairing = null;
+      reconnectAttempt = 0;
+      transport?.close();
+      void connect();
+      sendResponse({ ok: true });
+    });
+    return true;
   }
 });
 
@@ -72,39 +106,12 @@ scheduleReconnectAlarm();
 async function connect(): Promise<void> {
   clearReconnect();
   if (transport?.isOpen()) return;
-  const config = await loadConfig();
-  if (!config) {
-    await setStatus(false, "Open extension options to configure the bridge token.");
-    await chrome.action.setBadgeText({ text: "SET" });
-    return;
-  }
-
-  connectNative(config);
+  activeConfig = await loadConfig();
+  connectWebSocket(activeConfig?.port ?? DEFAULT_PORT);
 }
 
-function connectNative(config: BridgeConfig): void {
-  const port = chrome.runtime.connectNative(NATIVE_HOST_NAME);
-  let open = true;
-  const next: BridgeTransport = {
-    kind: "native",
-    isOpen: () => open,
-    send: (message) => port.postMessage(message),
-    close: () => {
-      if (!open) return;
-      open = false;
-      port.disconnect();
-    }
-  };
-  transport = next;
-  port.onMessage.addListener((message: unknown) => { void onTransportMessage(next, config, message); });
-  port.onDisconnect.addListener(() => {
-    open = false;
-    handleTransportClosed(next, config, chrome.runtime.lastError?.message);
-  });
-}
-
-function connectWebSocket(config: BridgeConfig): void {
-  const socket = new WebSocket(`ws://127.0.0.1:${config.port}`);
+function connectWebSocket(port: number): void {
+  const socket = new WebSocket(`ws://127.0.0.1:${port}`);
   const next: BridgeTransport = {
     kind: "websocket",
     isOpen: () => socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING,
@@ -112,16 +119,84 @@ function connectWebSocket(config: BridgeConfig): void {
     close: () => socket.close(1000, "transport closing")
   };
   transport = next;
-  socket.addEventListener("message", (event) => {
-    try { void onTransportMessage(next, config, JSON.parse(String(event.data))); } catch { return; }
+  socket.addEventListener("open", () => {
+    next.send({
+      type: "extension_hello",
+      extensionId: chrome.runtime.id,
+      hasToken: activeConfig !== null,
+      clientVersion: chrome.runtime.getManifest().version,
+      clientBuildId: BRIDGE_BUILD_ID
+    });
   });
-  socket.addEventListener("close", () => handleTransportClosed(next, config));
+  socket.addEventListener("message", (event) => {
+    try { void onTransportMessage(next, JSON.parse(String(event.data))); } catch { return; }
+  });
+  socket.addEventListener("close", () => handleTransportClosed(next));
   socket.addEventListener("error", () => socket.close());
 }
 
-async function onTransportMessage(target: BridgeTransport, config: BridgeConfig, message: unknown): Promise<void> {
+async function onTransportMessage(target: BridgeTransport, message: unknown): Promise<void> {
+    const pairingRequired = PairingRequiredSchema.safeParse(message);
+    if (pairingRequired.success) {
+      if (pairingRequired.data.protocolVersion !== PROTOCOL_VERSION) {
+        await setStatus(false, `Protocol mismatch: extension ${PROTOCOL_VERSION}, broker ${pairingRequired.data.protocolVersion}`);
+        target.close();
+        return;
+      }
+      pendingPairing = { nonce: pairingRequired.data.nonce, code: null };
+      await chrome.storage.local.set({
+        pairingState: { required: true, expiresAt: pairingRequired.data.expiresAt },
+        connectionStatus: { connected: false, message: "Ready to pair with your agent", at: new Date().toISOString() }
+      });
+      await chrome.action.setBadgeText({ text: "PAIR" });
+      return;
+    }
+
+    const pairingOk = PairingOkSchema.safeParse(message);
+    if (pairingOk.success) {
+      const pairing = pendingPairing;
+      if (!pairing?.code || pairing.nonce !== pairingOk.data.nonce) {
+        await setStatus(false, "The local broker returned an unexpected pairing response.");
+        target.close();
+        return;
+      }
+      const expectedProof = await pairingProofHex(
+        pairing.code,
+        pairingOkPayload(pairingOk.data.nonce, pairingOk.data.token, pairingOk.data.port, chrome.runtime.id, PROTOCOL_VERSION)
+      );
+      if (!constantTimeHexEqual(pairingOk.data.proof, expectedProof)) {
+        await setStatus(false, "The local broker could not prove it knew the pairing code.");
+        target.close();
+        return;
+      }
+      activeConfig = { token: pairingOk.data.token, port: pairingOk.data.port };
+      pendingPairing = null;
+      await chrome.storage.local.set({
+        token: pairingOk.data.token,
+        port: pairingOk.data.port,
+        pairingState: { required: false },
+        configuredAutomatically: true
+      });
+      await setStatus(false, "Paired. Establishing the secure connection…");
+      reconnectAttempt = 0;
+      target.close();
+      return;
+    }
+
+    const pairingError = PairingErrorSchema.safeParse(message);
+    if (pairingError.success) {
+      await setStatus(false, pairingError.data.message);
+      return;
+    }
+
     const challenge = AuthChallengeSchema.safeParse(message);
     if (challenge.success && challenge.data.channel === "extension") {
+      const config = activeConfig;
+      if (!config) {
+        await setStatus(false, "Pair this extension with the Browser Research plugin first.");
+        target.close();
+        return;
+      }
       if (challenge.data.protocolVersion !== PROTOCOL_VERSION) {
         await setStatus(false, `Protocol mismatch: extension ${PROTOCOL_VERSION}, broker ${challenge.data.protocolVersion}`);
         target.close();
@@ -155,7 +230,8 @@ async function onTransportMessage(target: BridgeTransport, config: BridgeConfig,
     if (auth.success && auth.data.channel === "extension") {
       reconnectAttempt = 0;
       startHeartbeat(target);
-      void setStatus(true, `Connected via ${target.kind === "native" ? "Native Messaging" : "loopback WebSocket"}`);
+      void chrome.storage.local.set({ pairingState: { required: false } });
+      void setStatus(true, "Connected securely to your agent");
       void chrome.action.setBadgeText({ text: "" });
       return;
     }
@@ -211,38 +287,91 @@ async function onTransportMessage(target: BridgeTransport, config: BridgeConfig,
     });
 }
 
-function handleTransportClosed(target: BridgeTransport, config: BridgeConfig, detail?: string): void {
+function handleTransportClosed(target: BridgeTransport, detail?: string): void {
   if (transport !== target) return;
   transport = null;
   stopHeartbeat();
   rejectNavigationChecks(new Error("Broker disconnected during navigation validation"));
-  if (target.kind === "native") {
-    void setStatus(false, `Native host unavailable${detail ? `: ${detail}` : ""}; trying loopback fallback.`);
-    connectWebSocket(config);
-    return;
-  }
-  void setStatus(false, "Local broker is unavailable or rejected the connection.");
-  void chrome.action.setBadgeText({ text: "OFF" });
+  void setStatus(false, activeConfig
+    ? "Waiting for the Browser Research plugin in your agent."
+    : "Install the Browser Research plugin in Codex or Claude Code, then pair once.");
+  void chrome.action.setBadgeText({ text: activeConfig ? "OFF" : "SET" });
   scheduleReconnect();
+}
+
+async function submitPairingCode(value: string): Promise<{ ok: boolean; message: string }> {
+  const code = normalizePairingCode(value);
+  if (!isValidPairingCode(code)) return { ok: false, message: "Enter the 16-character pairing code shown by your agent." };
+  if (!pendingPairing || !transport?.isOpen()) {
+    return { ok: false, message: "The agent plugin is not reachable yet. Start Codex or Claude Code and try again." };
+  }
+  const proof = await pairingProofHex(code, pairingSubmitPayload(pendingPairing.nonce, chrome.runtime.id, PROTOCOL_VERSION));
+  pendingPairing.code = code;
+  transport.send({ type: "pairing_submit", nonce: pendingPairing.nonce, proof });
+  await setStatus(false, "Checking pairing code…");
+  return { ok: true, message: "Checking pairing code…" };
 }
 
 async function executeJob(input: BrowserJob, deadlineAt: number, emit: PhaseEmitter): Promise<unknown> {
   const job = BrowserJobSchema.parse(input);
   const remainingMs = deadlineAt - Date.now();
   if (remainingMs <= 0) throw browserError("job_expired", "Browser job deadline elapsed");
-  const boundedJob = { ...job, timeoutMs: Math.min(job.timeoutMs, remainingMs) };
-  if (boundedJob.kind === "fetch_rendered_page") return fetchRenderedPage(boundedJob, emit);
-  return searchWeb(boundedJob, emit);
+  const executionDeadlineAt = Math.min(deadlineAt, Date.now() + job.timeoutMs);
+  if (job.kind === "fetch_rendered_page") return fetchRenderedPage(job, executionDeadlineAt, emit);
+  return searchWeb(job, executionDeadlineAt, emit);
 }
 
-async function fetchRenderedPage(job: Extract<BrowserJob, { kind: "fetch_rendered_page" }>, emit: PhaseEmitter) {
+async function fetchRenderedPage(
+  job: Extract<BrowserJob, { kind: "fetch_rendered_page" }>,
+  deadlineAt: number,
+  emit: PhaseEmitter
+) {
   if (!isAllowedPublicWebUrl(job.url)) throw browserError("blocked_url", "URL is outside the public HTTP(S) policy");
-  return withInactiveTab(job.url, job.timeoutMs, "navigating", emit, async (tabId, finalUrl) => {
-    await assertFinalNavigation(finalUrl);
+  if (fastFetchCompatibility.shouldTryFast(job.url)) {
+    emit("navigating", safeDomain(job.url));
+    try {
+      await withDeadline(assertPublicNavigation(job.url), deadlineAt);
+      const fetched = await withDeadline(getStaticFetch(job.url, deadlineAt), deadlineAt);
+      const classification = classifyFastFetchResponse({
+        status: fetched.status,
+        contentType: fetched.contentType,
+        body: fetched.body
+      });
+      if (classification.kind === "static") {
+        emit("extracting", safeDomain(fetched.finalUrl));
+        const result = unwrapExtractionResult(await withDeadline(extractStaticPage(job, fetched), deadlineAt));
+        if (isChallengeResult(result)) {
+          fastFetchCompatibility.recordFallback(job.url, "challenge_page");
+        } else {
+          fastFetchCompatibility.recordSuccess(job.url);
+          return result;
+        }
+      } else {
+        rememberFastFetchFallback(job.url, classification.reason);
+      }
+    } catch (error) {
+      if (isDeadlineOrPolicyError(error)) throw error;
+      // Network, body-size, and parser failures are recoverable. The rendered
+      // path below remains the source of truth for the wire result.
+    }
+  }
+
+  return fetchPageInRenderedTab(job, deadlineAt, emit);
+}
+
+async function fetchPageInRenderedTab(
+  job: Extract<BrowserJob, { kind: "fetch_rendered_page" }>,
+  deadlineAt: number,
+  emit: PhaseEmitter
+) {
+  return withInactiveTab(job.url, deadlineAt, "navigating", emit, async (tabId, finalUrl) => {
+    await assertFinalNavigation(finalUrl, deadlineAt);
+    assertDeadline(deadlineAt);
     const current = await chrome.tabs.get(tabId);
     if (!current.url || current.url !== finalUrl) throw browserError("navigation_changed", "Page URL changed after validation; refusing extraction");
     emit("extracting", safeDomain(finalUrl));
     await injectExtractor(tabId);
+    assertDeadline(deadlineAt);
     const immediatelyBeforeExtraction = await chrome.tabs.get(tabId);
     if (!immediatelyBeforeExtraction.url || immediatelyBeforeExtraction.url !== finalUrl) {
       throw browserError("navigation_changed", "Page URL changed during extractor setup; refusing extraction");
@@ -256,10 +385,11 @@ async function fetchRenderedPage(job: Extract<BrowserJob, { kind: "fetch_rendere
   });
 }
 
-async function searchWeb(job: Extract<BrowserJob, { kind: "search_web" }>, emit: PhaseEmitter) {
+async function searchWeb(job: Extract<BrowserJob, { kind: "search_web" }>, deadlineAt: number, emit: PhaseEmitter) {
   const url = searchUrl(job.provider, job.query);
-  return withInactiveTab(url, job.timeoutMs, "searching", emit, async (tabId, finalUrl) => {
-    await assertFinalNavigation(finalUrl);
+  return withInactiveTab(url, deadlineAt, "searching", emit, async (tabId, finalUrl) => {
+    await assertFinalNavigation(finalUrl, deadlineAt);
+    assertDeadline(deadlineAt);
     const current = await chrome.tabs.get(tabId);
     if (!current.url || current.url !== finalUrl) throw browserError("navigation_changed", "Search URL changed after validation");
     emit("extracting", safeDomain(finalUrl));
@@ -281,23 +411,25 @@ async function searchWeb(job: Extract<BrowserJob, { kind: "search_web" }>, emit:
 
 async function withInactiveTab<T>(
   url: string,
-  timeoutMs: number,
+  deadlineAt: number,
   openPhase: Extract<ResearchPhase, "navigating" | "searching">,
   emit: PhaseEmitter,
   action: (tabId: number, finalUrl: string) => Promise<T>
 ): Promise<T> {
-  await assertPublicNavigation(url);
+  assertDeadline(deadlineAt);
+  await withDeadline(assertPublicNavigation(url), deadlineAt);
   emit(openPhase, safeDomain(url));
-  const tab = await chrome.tabs.create({ url, active: false });
+  const tab = await withDeadline(chrome.tabs.create({ url, active: false }), deadlineAt);
   if (tab.id === undefined) throw browserError("tab_create_failed", "Chrome did not return a tab ID");
   try {
-    const settledUrl = await waitForTab(tab.id, timeoutMs);
+    const settledUrl = await waitForTab(tab.id, remainingMs(deadlineAt));
     emit("rendering", safeDomain(settledUrl));
-    await delay(1_200);
+    await waitForDomSettle(tab.id, deadlineAt);
+    assertDeadline(deadlineAt);
     const current = await chrome.tabs.get(tab.id);
     if (!current.url) throw browserError("navigation_missing", "Navigation completed without a current URL");
     const finalUrl = current.url;
-    return await action(tab.id, finalUrl);
+    return await withDeadline(action(tab.id, finalUrl), deadlineAt);
   } finally {
     await chrome.tabs.remove(tab.id).catch(() => undefined);
   }
@@ -309,18 +441,172 @@ async function assertPublicNavigation(value: string): Promise<void> {
   await assertNavigationUrl(value, resolveDns);
 }
 
-async function assertFinalNavigation(value: string): Promise<void> {
+async function assertFinalNavigation(value: string, deadlineAt: number): Promise<void> {
   if (!isAllowedPublicWebUrl(value)) throw browserError("blocked_redirect", "Page redirected to a blocked origin");
-  await assertPublicNavigation(value);
+  await withDeadline(assertPublicNavigation(value), deadlineAt);
+  assertDeadline(deadlineAt);
   if (!transport?.isOpen()) throw browserError("broker_disconnected", "Broker unavailable during final navigation validation");
   const id = crypto.randomUUID();
   await new Promise<void>((resolve, reject) => {
+    const timeoutMs = Math.min(5_000, remainingMs(deadlineAt));
     const timer = setTimeout(() => {
       pendingNavigationChecks.delete(id);
       reject(browserError("navigation_check_timeout", "Broker did not validate the final navigation in time"));
-    }, 5_000) as unknown as number;
+    }, timeoutMs) as unknown as number;
     pendingNavigationChecks.set(id, { resolve, reject, timer });
     transport!.send({ type: "navigation_check", id, url: value });
+  });
+}
+
+function getStaticFetch(url: string, deadlineAt: number): Promise<StaticFetchPayload> {
+  const key = canonicalFetchKey(url);
+  const existing = inFlightStaticFetches.get(key);
+  if (existing) return existing;
+  const pending = performStaticFetch(key, deadlineAt).finally(() => {
+    if (inFlightStaticFetches.get(key) === pending) inFlightStaticFetches.delete(key);
+  });
+  inFlightStaticFetches.set(key, pending);
+  return pending;
+}
+
+async function performStaticFetch(url: string, deadlineAt: number): Promise<StaticFetchPayload> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), STATIC_FETCH_TIMEOUT_MS);
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      credentials: "include",
+      redirect: "follow",
+      signal: controller.signal
+    });
+    const finalUrl = response.url || url;
+    // A redirect has already been followed by Chrome at this point (the same
+    // limitation as tab navigation), but broker/DNS approval must happen
+    // before the extension consumes any bytes from the final destination.
+    await assertFinalNavigation(finalUrl, deadlineAt);
+    const contentType = response.headers.get("content-type");
+    const mediaType = contentType?.split(";", 1)[0]?.trim().toLowerCase() ?? "";
+    const statusNeedsNoBody = response.status >= 400 || response.status === 204 || response.status === 205;
+    const knownUnsupportedType = mediaType !== "" && mediaType !== "text/html" && mediaType !== "application/xhtml+xml";
+    const body = statusNeedsNoBody || knownUnsupportedType ? "" : await readBoundedBody(response, MAX_STATIC_BODY_BYTES);
+    return {
+      status: response.status,
+      contentType,
+      finalUrl,
+      body
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function readBoundedBody(response: Response, maxBytes: number): Promise<string> {
+  const declaredLength = Number(response.headers.get("content-length"));
+  if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+    throw browserError("static_body_too_large", `Static response exceeded the ${maxBytes}-byte fast-path limit`);
+  }
+  if (!response.body) return "";
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let byteLength = 0;
+  let text = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    byteLength += value.byteLength;
+    if (byteLength > maxBytes) {
+      await reader.cancel().catch(() => undefined);
+      throw browserError("static_body_too_large", `Static response exceeded the ${maxBytes}-byte fast-path limit`);
+    }
+    text += decoder.decode(value, { stream: true });
+  }
+  return text + decoder.decode();
+}
+
+async function extractStaticPage(
+  job: Extract<BrowserJob, { kind: "fetch_rendered_page" }>,
+  fetched: StaticFetchPayload
+): Promise<unknown> {
+  await ensureOffscreenDocument();
+  return chrome.runtime.sendMessage({
+    type: "extract_static_page",
+    requestedUrl: job.url,
+    finalUrl: fetched.finalUrl,
+    html: fetched.body,
+    maxChars: job.maxChars
+  });
+}
+
+async function ensureOffscreenDocument(): Promise<void> {
+  if (await chrome.offscreen.hasDocument()) return;
+  creatingOffscreenDocument ??= chrome.offscreen.createDocument({
+    url: "offscreen.html",
+    reasons: [chrome.offscreen.Reason.DOM_PARSER],
+    justification: "Parse statically fetched public HTML without opening a browser tab"
+  }).finally(() => { creatingOffscreenDocument = null; });
+  await creatingOffscreenDocument;
+}
+
+async function waitForDomSettle(tabId: number, deadlineAt: number): Promise<void> {
+  const settleUntil = Math.min(deadlineAt, Date.now() + 900);
+  let previous = await sampleDom(tabId).catch(() => null);
+  if (!previous) return;
+
+  while (Date.now() + 150 < settleUntil) {
+    await delay(150);
+    const current = await sampleDom(tabId).catch(() => null);
+    if (!current) return;
+    if (domSnapshotsAreStable(previous, current)) return;
+    previous = current;
+  }
+}
+
+async function sampleDom(tabId: number): Promise<DomSnapshot> {
+  const results = await chrome.scripting.executeScript({
+    target: { tabId },
+    func: () => ({
+      readyState: document.readyState,
+      textLength: document.body?.innerText.length ?? 0,
+      elementCount: document.body?.getElementsByTagName("*").length ?? 0
+    })
+  });
+  const snapshot = results[0]?.result;
+  if (!snapshot) throw browserError("dom_sample_failed", "Chrome returned no DOM settle sample");
+  return snapshot;
+}
+
+function rememberFastFetchFallback(url: string, reason: FastFetchFallbackReason): void {
+  fastFetchCompatibility.recordFallback(url, reason);
+}
+
+function isChallengeResult(value: unknown): boolean {
+  return typeof value === "object" && value !== null && "challenge" in value && value.challenge === true;
+}
+
+function isDeadlineOrPolicyError(error: unknown): boolean {
+  if (!(error instanceof Error) || !("code" in error) || typeof error.code !== "string") return false;
+  return new Set(["job_expired", "blocked_url", "blocked_redirect", "blocked_dns", "dns_failed"]).has(error.code);
+}
+
+function remainingMs(deadlineAt: number): number {
+  const remaining = deadlineAt - Date.now();
+  if (remaining <= 0) throw browserError("job_expired", "Browser job deadline elapsed");
+  return remaining;
+}
+
+function assertDeadline(deadlineAt: number): void {
+  remainingMs(deadlineAt);
+}
+
+function withDeadline<T>(promise: Promise<T>, deadlineAt: number): Promise<T> {
+  const timeoutMs = remainingMs(deadlineAt);
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(browserError("job_expired", "Browser job deadline elapsed")), timeoutMs);
+    promise.then(
+      (value) => { clearTimeout(timer); resolve(value); },
+      (error: unknown) => { clearTimeout(timer); reject(error); }
+    );
   });
 }
 
@@ -429,4 +715,3 @@ function toBrowserError(error: unknown): BrowserError {
   }
   return { code: "browser_error", message: String(error) };
 }
-

@@ -1,39 +1,45 @@
 # MVP acceptance ledger
 
-Last updated: 2026-08-13
+Last updated: 2026-08-14
 
-## Passed
+## Product installation contract
 
-- v0.4 mutual HMAC challenge-response on both loopback peer types; malicious port-squatter and wrong-secret regressions prove the shared token is never sent before broker identity is established.
-- Final URLs are re-resolved in the broker and the tab URL is re-read immediately before extraction; unsafe or changed final destinations are rejected before content is returned.
-- Broker-owned concurrency queue uses absolute deadlines and survives MV3 worker suspension; disconnects fail in-flight work explicitly.
-- Protocol v2 reports schema/version errors directly and exposes build identity; doctor detects stale copied runtimes and broken pinned Node executables.
-- Official Stable Chrome 151 v0.4 acceptance passed rendered fetch, search, session-cookie, redirect, access-denial, crawler-restricted Bloomberg, concurrent Codex/Claude, and broker-kill recovery tests.
-- Complete browser suite in official Google Chrome Stable 151.0.7922.138, including Native Messaging, rendered extraction, search, and SSRF regressions.
-- Real installed Codex and Claude Code CLIs fetched rendered pages concurrently through one Stable Chrome profile; an observer measured four broker clients during overlap.
-- Representative source coverage: static page, rendered documentation page, redirect, session-cookie continuity, access-denial detection, and Bloomberg Technology, which the generic crawler reported as blocked by robots.txt but Stable Chrome legitimately rendered.
-- A verified broker process was terminated during a real Codex/Claude run. Codex observed one transient failure and recovered on retry without restarting; Claude's existing process continued successfully after the broker restart.
-- Setup and doctor passed after changing the pinned Native Messaging runtime from NVM Node to Homebrew Node; Stable Chrome spawned the host from the new absolute runtime path.
-- Codex plugin manifest validation.
-- Claude Code plugin manifest validation.
-- Real Codex CLI loaded the packaged MCP server and called `bridge_status`.
-- Real Claude Code loaded the packaged MCP server and called `bridge_status`.
-- Native Messaging framing, origin restriction, authentication, broker auto-start, and MCP round trip.
-- Concurrent Codex/Claude-style MCP clients share one persistent broker.
-- Broker reconnect after a mid-session failure and compatible cross-release reuse.
-- Stable-browser behavior when the Dev-channel-only `chrome.dns` API is absent.
-- Static URL policy and broker all-answer DNS enforcement regression suites.
-- Idempotent setup, private shared configuration, runtime doctor, safe uninstall, and optional configuration removal.
-- In-memory capture retention bounded to the newest 50 captures per MCP process.
+- Chrome extension installs through the Chrome Web Store.
+- Codex and Claude Code install their Browser Research plugin/MCP through the agent's normal plugin surface.
+- The plugin automatically creates private local configuration and starts the broker; the user does not run or supervise a script.
+- The extension and plugin pair once with a short-lived code. There is no Native Messaging installation, dedicated Chrome download, Developer Mode, extension-ID copy, or long-lived token paste.
+- The website exposes only real Store/marketplace links. Pending releases are labeled pending instead of falling back to source-code instructions.
 
-## MVP release status
+## Passed locally
 
-The technical MVP acceptance criteria are complete. The session-cookie fixture proves authenticated-profile continuity without using or disclosing personal credentials; a release candidate should additionally be smoke-tested against one source explicitly authorized in the dedicated production profile before broader distribution.
+- Protocol v3 first-run pairing uses a random 64-bit code, ten-minute expiry, five-attempt lockout, exact extension-origin binding, and bidirectional HMAC proofs. The pairing code is not sent over loopback and the long-lived credential is never shown to the user.
+- First MCP startup creates a private 256-bit local credential without prior configuration; the broker persists the Chrome identity after successful pairing.
+- Later extension and MCP connections retain mutual nonce-based HMAC authentication and malicious-port/wrong-secret regressions.
+- The public MV3 manifest has no `nativeMessaging` permission and no preselected developer extension key.
+- The extension options page provides the three-step agent pairing flow and contains no token, port, extension-ID, Native Messaging, doctor, or script UI.
+- The Codex and Claude plugin packaging contains the MCP server/broker and browse workflow without bundling the Chrome extension or legacy OS installer.
+- Extension-context static fetch is first; 401/403, challenge, empty-shell, unsupported-content, and JavaScript-dependent responses fall back to a short-lived rendered tab with adaptive settle timing.
+- Requested and final URLs receive public-address and policy checks; changed/unsafe destinations fail closed before extraction.
+- Broker-owned concurrency, absolute deadlines, cancellation, reconnect, bounded output, local policy, configurable retention, body-free audits, and explicit destructive maintenance tools are covered by automated tests.
+- The bundled research workflow provides DuckDuckGo → Bing → Google failover, transient retry, replacement sources, domain quarantine, canonical/syndication deduplication, source ranking, independent-evidence checks, claim coverage, prompt-injection handling, early stopping, and exact `Research incomplete` behavior.
+- Research-quality fixtures cover factual, technical, news, comparison, insufficient-evidence, recovery, and malicious-page scenarios.
 
-## Deferred until after MVP
+## Not yet publicly usable
 
-- Chrome Web Store and public marketplace publication.
-- Signed installers and automatic updates.
-- Windows packaging.
-- Tier-1 extension-context fetch optimization.
-- Licensed search API integration and search-provider fixture maintenance.
+These are external distribution gates, not user setup steps:
+
+- Chrome Web Store upload, review, and approved public URL.
+- Codex plugin-directory submission, review, and approved install URL.
+- Claude Code marketplace submission, review, and approved install URL.
+- Clean-machine acceptance from all three signed/reviewed packages.
+
+The app becomes user-ready only after all three distribution links are live and the clean-machine flow passes:
+
+`Add to Chrome → install agent plugin → ask to set up → enter code → connected → search → static fetch → rendered fallback`
+
+## Deferred after MVP
+
+- Bundled cross-platform runtime for agent environments without `node` on `PATH`.
+- Signed native/platform installers, Windows/ARM packaging, automatic updates, and rollback.
+- Licensed search API/BYOK, long-term provider fixture maintenance, conditional caching, PDF parsing, and encrypted cross-session audit persistence.
+- Portable interception of arbitrary native-crawler failures; recovery remains skill-directed.

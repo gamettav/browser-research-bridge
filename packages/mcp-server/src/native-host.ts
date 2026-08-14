@@ -13,6 +13,16 @@ async function main(): Promise<void> {
   const expectedOrigin = `chrome-extension://${config.extensionId}`;
   if (origin !== expectedOrigin) throw new Error(`Native host rejected extension origin ${origin}`);
 
+  // Native Messaging is an OS pipe opened by Chrome only for an origin listed
+  // in the host manifest. Bootstrap before connecting to the broker so a new
+  // dedicated profile can authenticate on its first launch with no copy/paste.
+  process.stdout.write(encodeNativeMessage({
+    type: "native_bootstrap_config",
+    extensionId: config.extensionId,
+    token: config.token,
+    port: config.port
+  }));
+
   const socket = await connectOrStartBroker(config, origin);
   const decoder = new NativeMessageDecoder((message) => {
     if (socket.readyState !== WebSocket.OPEN) throw new Error("Broker connection is closed");

@@ -58,6 +58,35 @@ describe("BrokerClient", () => {
     await client.close();
   });
 
+  it("propagates harness cancellation to the broker", async () => {
+    server = new WebSocketServer({ host: "127.0.0.1", port: 0 });
+    await new Promise<void>((resolve) => server!.once("listening", resolve));
+    const received: Array<Record<string, unknown>> = [];
+    server.on("connection", (socket) => {
+      socket.on("message", (raw) => received.push(JSON.parse(raw.toString()) as Record<string, unknown>));
+      respondAsBroker(socket, { holdJobs: true });
+    });
+    const address = server.address();
+    if (typeof address !== "object" || !address) throw new Error("Missing test broker address");
+
+    const client = await BrokerClient.connect(options(address.port));
+    const controller = new AbortController();
+    const job = client.runJob(
+      { kind: "search_web", query: "cancel me", provider: "duckduckgo", limit: 10, timeoutMs: 5_000 },
+      undefined,
+      controller.signal
+    );
+    await waitFor(() => received.some((message) => message.type === "broker_request" && message.operation === "run_job"));
+    const request = received.find((message) => message.type === "broker_request" && message.operation === "run_job");
+    controller.abort();
+
+    await expect(job).rejects.toMatchObject({ name: "AbortError" });
+    await waitFor(() => received.some((message) => message.type === "broker_cancel"));
+    expect(received.find((message) => message.type === "broker_cancel")?.id).toBe(request?.id);
+    expect((client as unknown as { pending: Map<string, unknown> }).pending.size).toBe(0);
+    await client.close();
+  });
+
   it("accepts a different release version when the wire protocol matches", async () => {
     server = new WebSocketServer({ host: "127.0.0.1", port: 0 });
     await new Promise<void>((resolve) => server!.once("listening", resolve));
@@ -174,7 +203,10 @@ function options(port: number) {
   };
 }
 
-function respondAsBroker(socket: WebSocket, overrides: { protocolVersion?: number; serverVersion?: string } = {}): void {
+function respondAsBroker(
+  socket: WebSocket,
+  overrides: { protocolVersion?: number; serverVersion?: string; holdJobs?: boolean } = {}
+): void {
   const nonce = "b".repeat(64);
   const protocolVersion = overrides.protocolVersion ?? PROTOCOL_VERSION;
   const serverVersion = overrides.serverVersion ?? "0.4.0";
@@ -213,6 +245,10 @@ function respondAsBroker(socket: WebSocket, overrides: { protocolVersion?: numbe
         result: {
           connected: true,
           expectedOrigin: "chrome-extension://abcdefghijklmnopabcdefghijklmnop",
+          pairingRequired: false,
+          pairingCode: null,
+          pairingExpiresAt: null,
+          pairingAttemptsRemaining: null,
           port: 32189,
           extensionVersion: "0.2.0",
           connectedAt: new Date().toISOString(),
@@ -225,6 +261,7 @@ function respondAsBroker(socket: WebSocket, overrides: { protocolVersion?: numbe
       }));
     }
     if (message.type === "broker_request" && message.operation === "run_job") {
+      if (overrides.holdJobs) return;
       const id = message.id ?? randomUUID();
       socket.send(JSON.stringify({
         type: "broker_progress",
@@ -253,4 +290,12 @@ function respondAsBroker(socket: WebSocket, overrides: { protocolVersion?: numbe
       }));
     }
   });
+}
+
+async function waitFor(predicate: () => boolean): Promise<void> {
+  const deadline = Date.now() + 2_000;
+  while (!predicate()) {
+    if (Date.now() > deadline) throw new Error("Timed out waiting for broker message");
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
 }

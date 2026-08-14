@@ -3,9 +3,9 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Browser Research Bridge",
+  title: "Browser Research",
   description:
-    "A local, read-only bridge that lets Claude Code and Codex read fully rendered web pages through your own Chrome — no cloud, no cookie extraction, no bypasses.",
+    "A Chrome extension and agent plugin that give Claude Code and Codex local, read-only web research with one-time pairing.",
 };
 
 // Applies a saved theme before first paint so an explicit light/dark choice

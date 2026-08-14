@@ -18,9 +18,21 @@ export const BrokerRequestSchema = z.discriminatedUnion("operation", [
   })
 ]);
 
+// Cancellation is intentionally a one-way message keyed by the original
+// broker request id. The requester has already stopped waiting, so an
+// acknowledgement would only create another response that can be orphaned.
+export const BrokerCancelSchema = z.object({
+  type: z.literal("broker_cancel"),
+  id: z.string().uuid()
+});
+
 const BrokerStatusSchema = z.object({
   connected: z.boolean(),
-  expectedOrigin: z.string(),
+  expectedOrigin: z.string().nullable(),
+  pairingRequired: z.boolean(),
+  pairingCode: z.string().nullable(),
+  pairingExpiresAt: z.string().nullable(),
+  pairingAttemptsRemaining: z.number().int().nonnegative().nullable(),
   port: z.number().int(),
   extensionVersion: z.string().nullable(),
   connectedAt: z.string().nullable(),
@@ -55,6 +67,7 @@ export const BrokerProgressSchema = z.object({
 });
 
 export type BrokerRequest = z.infer<typeof BrokerRequestSchema>;
+export type BrokerCancel = z.infer<typeof BrokerCancelSchema>;
 export type BrokerResponse = z.infer<typeof BrokerResponseSchema>;
 export type BrokerStatus = z.infer<typeof BrokerStatusSchema>;
 export type BrokerProgress = z.infer<typeof BrokerProgressSchema>;
