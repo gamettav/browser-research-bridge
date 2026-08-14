@@ -1,3 +1,5 @@
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 export default function AcceptableUse() {
   return (
     <main className="legal wrap">
@@ -17,7 +19,7 @@ export default function AcceptableUse() {
       <h2>Enforcement</h2>
       <p>The software fails closed on known unsafe destinations and access barriers. Access to distribution or support may be withdrawn for deliberate abuse.</p>
 
-      <a className="legal-back" href="/">← Back to Browser Research</a>
+      <a className="legal-back" href={`${BASE_PATH}/`}>← Back to Browser Research</a>
     </main>
   );
 }

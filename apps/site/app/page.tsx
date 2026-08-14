@@ -1,6 +1,7 @@
 import { ThemeToggle } from "../components/ThemeToggle";
 
-const REPO = process.env.NEXT_PUBLIC_REPOSITORY_URL;
+const REPO = process.env.NEXT_PUBLIC_REPOSITORY_URL ?? "https://github.com/gamettav/browser-research-bridge";
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 const CHROME_STORE_URL = process.env.NEXT_PUBLIC_CHROME_WEB_STORE_URL;
 const CODEX_PLUGIN_URL = process.env.NEXT_PUBLIC_CODEX_PLUGIN_URL;
@@ -253,9 +254,9 @@ export default function Home() {
         <div className="wrap">
           <p className="note">Browser Research Bridge — a local, read-only research bridge for coding agents. Open source under Apache-2.0.</p>
           <nav>
-            <a href="/privacy/">Privacy</a>
-            <a href="/acceptable-use/">Acceptable use</a>
-            <a href="/security/">Security</a>
+            <a href={`${BASE_PATH}/privacy/`}>Privacy</a>
+            <a href={`${BASE_PATH}/acceptable-use/`}>Acceptable use</a>
+            <a href={`${BASE_PATH}/security/`}>Security</a>
             {REPO && <a href={REPO}>Repository</a>}
           </nav>
         </div>

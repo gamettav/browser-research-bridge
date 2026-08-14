@@ -1,3 +1,5 @@
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 export default function Security() {
   return (
     <main className="legal wrap">
@@ -17,7 +19,7 @@ export default function Security() {
       <h2>Report a vulnerability</h2>
       <p>Use the private security contact on the Chrome Web Store listing. Do not publicly disclose a vulnerability that could expose local credentials, page content, or control of the extension before a fix is available.</p>
 
-      <a className="legal-back" href="/">← Back to Browser Research</a>
+      <a className="legal-back" href={`${BASE_PATH}/`}>← Back to Browser Research</a>
     </main>
   );
 }

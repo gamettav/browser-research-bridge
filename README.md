@@ -101,7 +101,7 @@ Browser Research can read policy-allowed pages available to the Chrome profile w
 - captures and body-free audit records stay bounded and process-local;
 - no remote telemetry by default.
 
-The extension needs HTTP(S) site access to research without asking for an `activeTab` click on every page. Chrome can restrict that access to an allowlist. People who keep sensitive services signed in can use a separate low-privilege profile for a stronger boundary. Read the full [security policy](SECURITY.md) and [privacy policy](apps/site/app/privacy/page.tsx).
+The extension needs HTTP(S) site access to research without asking for an `activeTab` click on every page. Chrome can restrict that access to an allowlist. People who keep sensitive services signed in can use a separate low-privilege profile for a stronger boundary. Read the full [security policy](SECURITY.md) and [privacy policy](PRIVACY.md).
 
 ## MCP tools
 

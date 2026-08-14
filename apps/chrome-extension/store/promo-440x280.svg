@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="280" viewBox="0 0 440 280">
+  <rect width="440" height="280" fill="#12201D"/>
+  <circle cx="373" cy="-8" r="154" fill="#185743" opacity="0.42"/>
+  <circle cx="433" cy="272" r="118" fill="#0F766E" opacity="0.22"/>
+  <g transform="translate(40 42)">
+    <rect width="72" height="72" rx="16" fill="#185743"/>
+    <rect x="13" y="13" width="46" height="46" rx="11" fill="none" stroke="#F8FAF7" stroke-width="5"/>
+    <path d="M24 36h24M39 26l10 10-10 10" fill="none" stroke="#B9F5D8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="40" y="153" fill="#F8FAF7" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="29" font-weight="700" letter-spacing="-1.2">Browser Research</text>
+  <text x="40" y="188" fill="#B9C9C3" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="17">Chrome for Codex + Claude Code</text>
+  <g transform="translate(40 220)">
+    <circle cx="5" cy="5" r="5" fill="#57D6C4"/>
+    <text x="19" y="10" fill="#D7E4DF" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">read-only · local bridge</text>
+  </g>
+</svg>

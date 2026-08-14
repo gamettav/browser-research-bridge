@@ -12,5 +12,5 @@ const archive = resolve(artifactsRoot, `browser-research-chrome-${manifest.versi
 
 await mkdir(artifactsRoot, { recursive: true });
 await rm(archive, { force: true });
-await run("zip", ["-q", "-r", archive, "."], { cwd: extensionRoot });
+await run("zip", ["-q", "-r", archive, ".", "-x", "*.map"], { cwd: extensionRoot });
 process.stdout.write(`${archive}\n`);
