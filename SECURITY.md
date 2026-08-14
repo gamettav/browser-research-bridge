@@ -1,6 +1,6 @@
 # Security policy
 
-Browser Research is a read-only local research bridge. Install the Chrome extension only in a profile whose site access you are comfortable granting to the agent. Chrome site-access controls can narrow the default all-public-sites permission; a separate low-privilege profile remains the strongest option for users who research while signed in to sensitive services, but it is not part of ordinary installation.
+GroundTab is a read-only local research bridge. Install the Chrome extension only in a profile whose site access you are comfortable granting to the agent. Chrome site-access controls can narrow the default all-public-sites permission; a separate low-privilege profile remains the strongest option for users who research while signed in to sensitive services, but it is not part of ordinary installation.
 
 ## Supported boundary
 

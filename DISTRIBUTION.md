@@ -3,8 +3,8 @@
 The end-user installation contract is:
 
 1. **Chrome:** click **Add to Chrome** on the product website and complete the Chrome Web Store dialog.
-2. **Agent:** install **Browser Research** from the Codex plugin directory or Claude Code marketplace.
-3. **Pair:** ask the agent to **set up Browser Research**, then enter its one-time code in the extension page.
+2. **Agent:** install **GroundTab** from the Codex plugin directory or Claude Code marketplace.
+3. **Pair:** ask the agent to **set up GroundTab**, then enter its one-time code in the extension page.
 
 No public instructions may direct users to clone the repository, run project scripts, install Native Messaging, download Chrome for Testing, enable Developer Mode, copy an extension ID, or paste a bridge token.
 

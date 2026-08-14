@@ -70,7 +70,7 @@ export class BrokerClient {
     this.closing = true;
     const socket = this.socket;
     this.socket = null;
-    this.rejectPending(new Error("Browser Research MCP client is shutting down"));
+    this.rejectPending(new Error("GroundTab MCP client is shutting down"));
     if (!socket || socket.readyState === WebSocket.CLOSED) return;
     await new Promise<void>((resolve) => {
       socket.once("close", () => resolve());
@@ -88,7 +88,7 @@ export class BrokerClient {
     if (signal?.aborted) throw abortError();
     const socket = await this.ensureConnected();
     if (signal?.aborted) throw abortError();
-    if (socket.readyState !== WebSocket.OPEN) throw new Error("Browser Research broker disconnected before the request was sent");
+    if (socket.readyState !== WebSocket.OPEN) throw new Error("GroundTab broker disconnected before the request was sent");
     const id = randomUUID();
     const response = new Promise<BrokerResponse>((resolve, reject) => {
       const onAbort = () => {
@@ -117,7 +117,7 @@ export class BrokerClient {
   }
 
   private ensureConnected(): Promise<WebSocket> {
-    if (this.closing) return Promise.reject(new Error("Browser Research MCP client is closed"));
+    if (this.closing) return Promise.reject(new Error("GroundTab MCP client is closed"));
     if (this.socket?.readyState === WebSocket.OPEN) return Promise.resolve(this.socket);
     if (this.connectPromise) return this.connectPromise;
 
@@ -125,7 +125,7 @@ export class BrokerClient {
       .then((socket) => {
         if (this.closing) {
           socket.close(1000, "MCP client closed during reconnect");
-          throw new Error("Browser Research MCP client is closed");
+          throw new Error("GroundTab MCP client is closed");
         }
         this.attach(socket);
         return socket;
@@ -166,7 +166,7 @@ export class BrokerClient {
     });
     socket.on("close", () => {
       if (this.socket === socket) this.socket = null;
-      this.rejectPending(new Error("Browser Research broker disconnected"));
+      this.rejectPending(new Error("GroundTab broker disconnected"));
     });
     socket.on("error", () => undefined);
   }
@@ -206,7 +206,7 @@ async function connectWithBrokerStart(options: BrokerClientOptions): Promise<Web
       if (!isBrokerUnavailable(error)) throw error;
     }
   }
-  throw new Error(`Could not start Browser Research broker: ${errorMessage(lastError)}`);
+  throw new Error(`Could not start GroundTab broker: ${errorMessage(lastError)}`);
 }
 
 function connectOnce(options: BrokerClientOptions, timeoutMs: number): Promise<WebSocket> {

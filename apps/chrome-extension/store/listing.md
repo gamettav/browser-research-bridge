@@ -4,30 +4,30 @@ Use this sheet when creating the unlisted MVP item in the Chrome Web Store Devel
 
 ## Store listing
 
-- Product name: `Browser Research`
-- Summary: `Read and research public web pages through Chrome from Codex or Claude Code.`
-- Language: `English`
-- Category: `Productivity`
+- Product name: `GroundTab`
+- Summary: `Ground Codex and Claude Code in real web pages through Chrome.`
+- Language: `English (United States)`
+- Category: `Workflow & Planning`
 - Visibility: `Unlisted`
 - Regions: `All regions`
 - Website: `https://gamettav.github.io/browser-research-bridge/`
 - Support URL: `https://github.com/gamettav/browser-research-bridge/issues`
 - Privacy policy: `https://gamettav.github.io/browser-research-bridge/privacy/`
 - Store icon: `apps/chrome-extension/static/icon-128.png`
-- Screenshot: `apps/chrome-extension/store/screenshot-pairing-1280x800.png`
-- Small promo tile: `apps/chrome-extension/store/promo-440x280.png`
+- Screenshot: `apps/chrome-extension/store/groundtab-pairing-1280x800.png`
+- Small promo tile: `apps/chrome-extension/store/groundtab-promo-440x280.png`
 
 ### Detailed description
 
-Browser Research lets Codex and Claude Code read pages through Chrome when ordinary fetching is blocked, empty, or requires JavaScript.
+GroundTab connects Codex and Claude Code to Chrome for read-only web research. It gives your agent a grounded view of real pages when ordinary fetching is blocked, empty, or requires JavaScript.
 
-Install the matching agent plugin, ask the agent to set up Browser Research, and enter the one-time code in the extension. After pairing, the agent can search the web, fetch static HTML without opening a tab, and use an inactive rendered tab when a page needs JavaScript.
+Install the matching agent plugin, ask the agent to set up GroundTab, and enter the one-time code in the extension. After pairing, the agent can search the web, fetch static HTML without opening a tab, and use an inactive rendered tab when a page needs JavaScript.
 
-Browser Research is read-only. It does not click controls, type into pages, submit forms, solve CAPTCHAs, bypass logins or paywalls, or expose cookie values. Access barriers return an error.
+GroundTab is read-only. It does not click controls, type into pages, submit forms, solve CAPTCHAs, bypass logins or paywalls, or expose cookie values. Access barriers return an error.
 
 PAGE ACCESS AND DATA USE
 
-The extension requests HTTP(S) site access so it can read a user-requested URL without requiring a manual click for every research page. It processes requested URLs and bounded readable page content locally, then sends the result over 127.0.0.1 to the user's Codex or Claude Code plugin. Browser Research has no cloud service and enables no remote telemetry by default. Users can restrict the extension's site access in Chrome.
+The extension requests HTTP(S) site access so it can read a user-requested URL without requiring a manual click for every research page. It processes requested URLs and bounded readable page content locally, then sends the result over 127.0.0.1 to the user's Codex or Claude Code plugin. GroundTab has no cloud service and enables no remote telemetry by default. Users can restrict the extension's site access in Chrome.
 
 The default local policy denies banking, healthcare, administration, email, password-manager, localhost, private-network, and cloud-metadata destinations. DNS and redirect checks fail closed before extraction.
 
@@ -56,7 +56,7 @@ Run the packaged read-only extractor in a rendered fallback tab. The extractor r
 
 `storage`
 
-Store the generated local pairing credential, broker port, connection state, and pairing status in Chrome extension storage. The credential is never shown to the user or sent to a remote Browser Research service.
+Store the generated local pairing credential, broker port, connection state, and pairing status in Chrome extension storage. The credential is never shown to the user or sent to a remote GroundTab service.
 
 `tabs`
 
@@ -81,15 +81,15 @@ The data is used only for the extension's user-facing research feature. It is pr
 
 ## Reviewer instructions
 
-No website account or paid feature is required. The extension is a companion to the Browser Research Codex or Claude Code plugin and initially opens its pairing page. The full source, protocol, tests, and packaged agent plugins are available at:
+No website account or paid feature is required. The extension is a companion to the GroundTab Codex or Claude Code plugin and initially opens its pairing page. The full source, protocol, tests, and packaged agent plugins are available at:
 
 `https://github.com/gamettav/browser-research-bridge`
 
 Expected first-run behavior:
 
-1. Click the Browser Research toolbar icon.
+1. Click the GroundTab toolbar icon.
 2. The options page reports that it is waiting for the local agent plugin.
-3. Start the Browser Research plugin in Codex or Claude Code and request setup.
+3. Start the GroundTab plugin in Codex or Claude Code and request setup.
 4. Enter the 16-character one-time code shown by the agent.
 5. The options page changes to connected.
 

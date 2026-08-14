@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Browser Research",
+  title: "GroundTab",
   description:
     "A Chrome extension and agent plugin that give Claude Code and Codex local, read-only web research with one-time pairing.",
 };

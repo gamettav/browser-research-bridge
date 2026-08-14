@@ -194,7 +194,7 @@ describe("BrowserBridge", () => {
       nonce: challenge.nonce,
       protocolVersion: PROTOCOL_VERSION,
       clientId: extensionId,
-      clientVersion: "0.4.0",
+      clientVersion: "0.4.1",
       clientBuildId: BRIDGE_BUILD_ID,
       proof: await hmacSha256Hex(wrongToken, clientProofPayload("extension", challenge.nonce, PROTOCOL_VERSION, extensionId, BRIDGE_BUILD_ID))
     }));
@@ -281,7 +281,7 @@ async function authenticateExtension(socket: WebSocket, messages: unknown[]): Pr
     nonce: challenge.nonce,
     protocolVersion: PROTOCOL_VERSION,
     clientId: extensionId,
-    clientVersion: "0.4.0",
+    clientVersion: "0.4.1",
     clientBuildId: BRIDGE_BUILD_ID,
     proof: await hmacSha256Hex(token, clientProofPayload("extension", challenge.nonce, PROTOCOL_VERSION, extensionId, BRIDGE_BUILD_ID))
   }));
@@ -293,7 +293,7 @@ function sendHello(socket: WebSocket, hasToken: boolean): void {
     type: "extension_hello",
     extensionId,
     hasToken,
-    clientVersion: "0.4.0",
+    clientVersion: "0.4.1",
     clientBuildId: BRIDGE_BUILD_ID
   }));
 }

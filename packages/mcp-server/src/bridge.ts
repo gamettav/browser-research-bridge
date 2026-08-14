@@ -136,7 +136,7 @@ export class BrowserBridge {
   async runJob(job: BrowserJob, onProgress?: (event: ProgressEvent) => void, signal?: AbortSignal): Promise<JobResultMessage> {
     if (signal?.aborted) throw abortError();
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-      throw new Error("Chrome extension is not connected. Open Chrome and check the Browser Research extension options.");
+      throw new Error("Chrome extension is not connected. Open Chrome and check the GroundTab extension options.");
     }
 
     const id = randomUUID();

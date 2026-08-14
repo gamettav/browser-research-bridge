@@ -36,7 +36,7 @@ async function main(): Promise<void> {
     brokerPath,
     configPath: source === "environment" ? null : source
   });
-  process.stderr.write(`Browser Research configuration loaded from ${source}\n`);
+  process.stderr.write(`GroundTab configuration loaded from ${source}\n`);
   const captures = new CaptureStore({
     maxCaptures: config.captureRetentionCount,
     retentionMs: config.captureRetentionMs,
@@ -402,7 +402,7 @@ async function main(): Promise<void> {
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  process.stderr.write("Browser Research MCP server running on stdio\n");
+  process.stderr.write("GroundTab MCP server running on stdio\n");
 
   async function shutdown() {
     await bridge.close();

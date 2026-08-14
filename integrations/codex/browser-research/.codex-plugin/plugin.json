@@ -1,20 +1,20 @@
 {
   "name": "browser-research",
-  "version": "0.4.0",
-  "description": "Research public web pages through the Browser Research Chrome extension.",
+  "version": "0.4.1",
+  "description": "Research web pages through the GroundTab Chrome extension.",
   "author": {
-    "name": "Browser Research"
+    "name": "GroundTab"
   },
   "skills": "./skills/",
   "interface": {
-    "displayName": "Browser Research",
+    "displayName": "GroundTab",
     "shortDescription": "Research the web through your Chrome extension.",
-    "longDescription": "Browser Research adds read-only MCP tools for autonomous discovery and page extraction through the paired Browser Research Chrome extension. The local broker starts with the plugin and pairs once without exposing browser cookies or a long-lived credential.",
-    "developerName": "Browser Research",
+    "longDescription": "GroundTab adds read-only MCP tools for autonomous discovery and page extraction through the paired GroundTab Chrome extension. The local broker starts with the plugin and pairs once without exposing browser cookies or a long-lived credential.",
+    "developerName": "GroundTab",
     "category": "Productivity",
     "capabilities": ["Read"],
     "defaultPrompt": [
-      "Research this topic with Browser Research and cite the final source URLs."
+      "Research this topic with GroundTab and cite the final source URLs."
     ]
   },
   "mcpServers": "./.mcp.json"

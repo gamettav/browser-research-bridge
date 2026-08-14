@@ -10,7 +10,7 @@ const transport = new StdioClientTransport({
 });
 transport.stderr?.on("data", () => undefined);
 
-const client = new Client({ name: "browser-research-source-coverage", version: "0.4.0" });
+const client = new Client({ name: "browser-research-source-coverage", version: "0.4.1" });
 const summary = {};
 
 try {

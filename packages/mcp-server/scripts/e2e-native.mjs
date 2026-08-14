@@ -49,7 +49,7 @@ writeNative(native.stdin, {
   nonce: challenge.nonce,
   protocolVersion: PROTOCOL_VERSION,
   clientId: extensionId,
-  clientVersion: "0.4.0",
+  clientVersion: "0.4.1",
   clientBuildId: BRIDGE_BUILD_ID,
   proof: await hmacSha256Hex(token, clientProofPayload("extension", challenge.nonce, PROTOCOL_VERSION, extensionId, BRIDGE_BUILD_ID))
 });
@@ -64,7 +64,7 @@ const transport = new StdioClientTransport({
   stderr: "pipe"
 });
 transport.stderr?.on("data", () => undefined);
-const client = new Client({ name: "native-host-e2e", version: "0.4.0" });
+const client = new Client({ name: "native-host-e2e", version: "0.4.1" });
 
 try {
   await client.connect(transport);

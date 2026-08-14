@@ -27,7 +27,7 @@ async function main(): Promise<void> {
   });
   bridge.onBrokerConnection = authenticateBrokerClient;
   await bridge.ready;
-  process.stderr.write(`Browser Research broker running on 127.0.0.1:${bridge.port}\n`);
+  process.stderr.write(`GroundTab broker running on 127.0.0.1:${bridge.port}\n`);
   scheduleIdleShutdown();
 }
 

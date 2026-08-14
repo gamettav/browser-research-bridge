@@ -5,7 +5,7 @@ Last updated: 2026-08-14
 ## Product installation contract
 
 - Chrome extension installs through the Chrome Web Store.
-- Codex and Claude Code install their Browser Research plugin/MCP through the agent's normal plugin surface.
+- Codex and Claude Code install their GroundTab plugin/MCP through the agent's normal plugin surface.
 - The plugin automatically creates private local configuration and starts the broker; the user does not run or supervise a script.
 - The extension and plugin pair once with a short-lived code. There is no Native Messaging installation, dedicated Chrome download, Developer Mode, extension-ID copy, or long-lived token paste.
 - The website exposes only real Store/marketplace links. Pending releases are labeled pending instead of falling back to source-code instructions.

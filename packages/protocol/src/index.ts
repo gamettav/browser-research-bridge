@@ -2,8 +2,8 @@ import { z } from "zod";
 
 export const DEFAULT_PORT = 32189;
 export const PROTOCOL_VERSION = 3;
-export const BRIDGE_VERSION = "0.4.0";
-export const BRIDGE_BUILD_ID = "browser-research-0.4.0-pairing-v3";
+export const BRIDGE_VERSION = "0.4.1";
+export const BRIDGE_BUILD_ID = "browser-research-0.4.1-pairing-v3";
 export const TOKEN_PATTERN = /^[0-9a-f]{64}$/;
 export const PROOF_PATTERN = /^[0-9a-f]{64}$/;
 export const NONCE_PATTERN = /^[0-9a-f]{64}$/;

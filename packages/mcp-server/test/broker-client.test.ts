@@ -182,7 +182,7 @@ describe("BrokerClient", () => {
         channel: "broker-client",
         nonce: "c".repeat(64),
         protocolVersion: PROTOCOL_VERSION,
-        serverVersion: "0.4.0",
+        serverVersion: "0.4.1",
         serverBuildId: BRIDGE_BUILD_ID,
         proof: "0".repeat(64)
       }));
@@ -209,7 +209,7 @@ function respondAsBroker(
 ): void {
   const nonce = "b".repeat(64);
   const protocolVersion = overrides.protocolVersion ?? PROTOCOL_VERSION;
-  const serverVersion = overrides.serverVersion ?? "0.4.0";
+  const serverVersion = overrides.serverVersion ?? "0.4.1";
   void hmacSha256Hex(token, serverProofPayload("broker-client", nonce, protocolVersion, BRIDGE_BUILD_ID)).then((proof) => {
     socket.send(JSON.stringify({
       type: "auth_challenge",

@@ -47,7 +47,7 @@ await writeFile(launcherPath, launcher, { mode: 0o700 });
 await chmod(launcherPath, 0o700);
 const manifest = {
   name: HOST_NAME,
-  description: "Browser Research local broker relay",
+  description: "GroundTab local broker relay",
   path: launcherPath,
   type: "stdio",
   allowed_origins: [`chrome-extension://${args.extensionId}/`]

@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="apps/chrome-extension/static/icon-128.png" width="104" alt="Browser Research icon">
+  <img src="apps/chrome-extension/static/icon-128.png" width="104" alt="GroundTab icon">
 </p>
 
-<h1 align="center">Browser Research</h1>
+<h1 align="center">GroundTab</h1>
 
 <p align="center">
   Let Codex and Claude Code read the web through Chrome when ordinary crawling comes back blocked, empty, or half-rendered.
@@ -15,7 +15,7 @@
   <a href="LICENSE"><img alt="Apache 2.0 license" src="https://img.shields.io/badge/license-Apache--2.0-185743"></a>
 </p>
 
-Your agent searches, compares sources, and writes the answer. Chrome handles the pages that need a real browser. Browser Research connects the two over localhost and returns clean text with the final source URL.
+Your agent searches, compares sources, and writes the answer. Chrome handles the pages that need a real browser. GroundTab connects the two over localhost and returns clean text with the final source URL.
 
 Everything runs on the user's machine: the broker stays on localhost, the extension returns page text rather than cookie values, and access barriers stay barriers.
 
@@ -31,9 +31,9 @@ Agent:  Searching DuckDuckGo…
 
 The public install flow has three steps:
 
-1. Add **Browser Research** from the Chrome Web Store.
-2. Install the **Browser Research** plugin in Codex or Claude Code.
-3. Ask the agent to **“set up Browser Research”** and enter its one-time code in the extension.
+1. Add **GroundTab** from the Chrome Web Store.
+2. Install the **GroundTab** plugin in Codex or Claude Code.
+3. Ask the agent to **“set up GroundTab”** and enter its one-time code in the extension.
 
 That is the whole user setup. The agent plugin starts the local MCP broker itself. Users do not clone this repository, install Native Messaging, download a second Chrome, enable Developer Mode, copy an extension ID, or paste a permanent token.
 
@@ -42,7 +42,7 @@ That is the whole user setup. The agent plugin starts the local MCP broker itsel
 
 ## Where it helps
 
-| The page | What Browser Research does |
+| The page | What GroundTab does |
 | --- | --- |
 | Plain HTML | Fetches and extracts it without opening a tab |
 | JavaScript shell | Opens an inactive tab, waits for the DOM to settle, then extracts |
@@ -60,7 +60,7 @@ A successful extension-context fetch avoids creating a tab. Rendered navigation 
 flowchart LR
     A[Codex or Claude Code] -->|MCP over stdio| B[Bundled local plugin]
     B -->|mutual authentication| C[Broker on 127.0.0.1]
-    C -->|paired extension origin| D[Browser Research for Chrome]
+    C -->|paired extension origin| D[GroundTab for Chrome]
     D --> E{Can static HTML answer it?}
     E -->|yes| F[Extract without a tab]
     E -->|no| G[Render in an inactive tab]
@@ -90,7 +90,7 @@ Page text is always untrusted input. Instructions embedded in a website do not g
 
 ## Security boundary
 
-Browser Research can read policy-allowed pages available to the Chrome profile where it is installed. That power is intentionally narrower than browser automation:
+GroundTab can read policy-allowed pages available to the Chrome profile where it is installed. That power is intentionally narrower than browser automation:
 
 - no click, type, submit, download, or form tool;
 - no cookie values, storage, history, or form-field values in agent output;

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Browser Research",
-  "version": "0.4.0",
-  "description": "Connect Chrome to Codex or Claude Code for read-only web research.",
+  "name": "GroundTab",
+  "version": "0.4.1",
+  "description": "Ground Codex and Claude Code in real web pages through Chrome.",
   "minimum_chrome_version": "116",
   "permissions": ["alarms", "offscreen", "scripting", "storage", "tabs"],
   "host_permissions": ["http://*/*", "https://*/*"],
@@ -20,7 +20,7 @@
     "open_in_tab": true
   },
   "action": {
-    "default_title": "Browser Research",
+    "default_title": "GroundTab",
     "default_icon": {
       "16": "icon-16.png",
       "32": "icon-32.png"

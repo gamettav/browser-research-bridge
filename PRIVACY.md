@@ -2,7 +2,7 @@
 
 Effective August 14, 2026
 
-Browser Research connects a Chrome extension to a Codex or Claude Code plugin on the same computer. It has no Browser Research cloud service and does not enable remote telemetry by default.
+GroundTab connects a Chrome extension to a Codex or Claude Code plugin on the same computer. It has no GroundTab cloud service and does not enable remote telemetry by default.
 
 ## Data the extension processes
 
@@ -17,11 +17,11 @@ The extension does not return cookie values, browser storage, browsing history o
 
 ## How data is used
 
-The extension uses page URLs and website content only to complete research requested by the user. It sends bounded results over the loopback interface to the Browser Research plugin running on the same device. The user's Codex or Claude Code application may then send that result to its model provider under the provider's terms and privacy policy.
+The extension uses page URLs and website content only to complete research requested by the user. It sends bounded results over the loopback interface to the GroundTab plugin running on the same device. The user's Codex or Claude Code application may then send that result to its model provider under the provider's terms and privacy policy.
 
-Browser Research does not sell data, use it for advertising, use it to determine creditworthiness, or transfer it to a Browser Research-operated remote service.
+GroundTab does not sell data, use it for advertising, use it to determine creditworthiness, or transfer it to a GroundTab-operated remote service.
 
-Browser Research's use of information received from Chrome complies with the Chrome Web Store User Data Policy, including the Limited Use requirements.
+GroundTab's use of information received from Chrome complies with the Chrome Web Store User Data Policy, including the Limited Use requirements.
 
 ## Storage and retention
 
@@ -39,7 +39,7 @@ HTTP(S) site access lets the extension research a URL without requiring a click 
 
 ## Deletion
 
-Removing the extension clears its Chrome-managed local storage. Removing the agent plugin and its local Browser Research configuration clears the matching credential and policy. Browser Research has no cloud account or cloud copy to delete.
+Removing the extension clears its Chrome-managed local storage. Removing the agent plugin and its local GroundTab configuration clears the matching credential and policy. GroundTab has no cloud account or cloud copy to delete.
 
 ## Contact
 

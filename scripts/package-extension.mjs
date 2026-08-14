@@ -8,7 +8,7 @@ const root = resolve(import.meta.dirname, "..");
 const extensionRoot = resolve(root, "apps/chrome-extension/dist");
 const manifest = JSON.parse(await readFile(resolve(extensionRoot, "manifest.json"), "utf8"));
 const artifactsRoot = resolve(root, "artifacts");
-const archive = resolve(artifactsRoot, `browser-research-chrome-${manifest.version}.zip`);
+const archive = resolve(artifactsRoot, `groundtab-chrome-${manifest.version}.zip`);
 
 await mkdir(artifactsRoot, { recursive: true });
 await rm(archive, { force: true });

@@ -2,11 +2,11 @@
 interface:
   display_name: "Browse"
   short_description: "Research the web and answer with cited sources, through the local Chrome bridge."
-  default_prompt: "Research this topic through Browser Research and answer with cited final source URLs."
+  default_prompt: "Research this topic through GroundTab and answer with cited final source URLs."
 dependencies:
   tools:
     - type: mcp
       value: browser-research
-      description: "Read-only Browser Research tools: web search and rendered-page fetch."
+      description: "Read-only GroundTab tools: web search and rendered-page fetch."
 policy:
   allow_implicit_invocation: true

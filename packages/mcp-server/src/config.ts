@@ -102,7 +102,7 @@ export async function loadServerConfig(environment: NodeJS.ProcessEnv = process.
   );
 
   if (!isValidBridgeToken(token)) {
-    throw new Error(`Browser Research could not load a valid 64-character lowercase hexadecimal token from ${configPath}`);
+    throw new Error(`GroundTab could not load a valid 64-character lowercase hexadecimal token from ${configPath}`);
   }
   if (extensionId !== null && !/^[a-p]{32}$/.test(extensionId)) {
     throw new Error(`The Chrome extension ID in ${configPath} is invalid`);
@@ -277,7 +277,7 @@ async function createInitialConfigFile(path: string): Promise<void> {
       }
       return;
     }
-    throw new Error(`Could not create Browser Research configuration at ${path}: ${errorMessage(error)}`);
+    throw new Error(`Could not create GroundTab configuration at ${path}: ${errorMessage(error)}`);
   }
 }
 
@@ -288,7 +288,7 @@ async function writePrivateJsonAtomically(path: string, value: object): Promise<
     await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, { encoding: "utf8", flag: "wx", mode: 0o600 });
     await rename(temporary, path);
   } catch (error) {
-    throw new Error(`Could not save Browser Research pairing at ${path}: ${errorMessage(error)}`);
+    throw new Error(`Could not save GroundTab pairing at ${path}: ${errorMessage(error)}`);
   }
 }
 

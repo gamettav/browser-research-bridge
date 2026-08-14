@@ -51,7 +51,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 
 function renderStatus(value: unknown): void {
   if (!value || typeof value !== "object") {
-    status.textContent = "Waiting for the Browser Research plugin in your agent…";
+    status.textContent = "Waiting for the GroundTab plugin in your agent…";
     status.dataset.connected = "false";
     return;
   }

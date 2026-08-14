@@ -193,7 +193,7 @@ async function onTransportMessage(target: BridgeTransport, message: unknown): Pr
     if (challenge.success && challenge.data.channel === "extension") {
       const config = activeConfig;
       if (!config) {
-        await setStatus(false, "Pair this extension with the Browser Research plugin first.");
+        await setStatus(false, "Pair this extension with the GroundTab plugin first.");
         target.close();
         return;
       }
@@ -293,8 +293,8 @@ function handleTransportClosed(target: BridgeTransport, detail?: string): void {
   stopHeartbeat();
   rejectNavigationChecks(new Error("Broker disconnected during navigation validation"));
   void setStatus(false, activeConfig
-    ? "Waiting for the Browser Research plugin in your agent."
-    : "Install the Browser Research plugin in Codex or Claude Code, then pair once.");
+    ? "Waiting for the GroundTab plugin in your agent."
+    : "Install the GroundTab plugin in Codex or Claude Code, then pair once.");
   void chrome.action.setBadgeText({ text: activeConfig ? "OFF" : "SET" });
   scheduleReconnect();
 }

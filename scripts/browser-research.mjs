@@ -63,7 +63,7 @@ async function install(options) {
   await chmod(configPath, 0o600);
 
   if (options.noLaunch !== true) launchBrowser({ browserPath, profileDir, extensionPath: installedExtensionPath });
-  process.stdout.write("Browser Research is installed.\n");
+  process.stdout.write("GroundTab is installed.\n");
   process.stdout.write(`Dedicated profile: ${profileDir}\n`);
   process.stdout.write(`Browser launcher: ${displayLauncherPath(launcherPath)}\n`);
   process.stdout.write(options.noLaunch === true
@@ -78,7 +78,7 @@ async function openBrowser(options) {
   const profileDir = resolve(options.profileDir ?? config.profileDir ?? defaultProfileDir());
   const extensionPath = resolve(options.extensionPath ?? config.extensionPath ?? await resolveExtensionSource(undefined));
   launchBrowser({ browserPath, profileDir, extensionPath });
-  process.stdout.write(`Opening Browser Research with its dedicated profile: ${profileDir}\n`);
+  process.stdout.write(`Opening GroundTab with its dedicated profile: ${profileDir}\n`);
 }
 
 async function setup(options) {
@@ -153,7 +153,7 @@ async function doctor(options) {
   const failed = checks.filter((check) => !check.ok);
   for (const check of checks) process.stdout.write(`${check.ok ? "PASS" : "FAIL"}  ${check.message}\n`);
   if (failed.length > 0) fail(`Doctor found ${failed.length} problem${failed.length === 1 ? "" : "s"}.`);
-  process.stdout.write("Browser Research local installation is healthy. Configuration is automatic when the dedicated browser opens.\n");
+  process.stdout.write("GroundTab local installation is healthy. Configuration is automatic when the dedicated browser opens.\n");
 }
 
 async function uninstall(options) {
@@ -202,7 +202,7 @@ async function uninstall(options) {
     await removeEmptyDirectory(dirname(configPath));
   }
 
-  if (removed.length === 0) process.stdout.write("Browser Research native host was already absent.\n");
+  if (removed.length === 0) process.stdout.write("GroundTab native host was already absent.\n");
   else process.stdout.write(`Removed:\n${removed.map((path) => `- ${path}`).join("\n")}\n`);
   if (options.removeConfig !== true) process.stdout.write(`Kept configuration: ${configPath}\n`);
 }
@@ -415,12 +415,12 @@ async function createBrowserLauncher({ browserPath, profileDir, extensionPath, l
     await writeFile(resolve(contents, "Info.plist"), `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
-  <key>CFBundleName</key><string>Browser Research</string>
-  <key>CFBundleDisplayName</key><string>Browser Research</string>
+  <key>CFBundleName</key><string>GroundTab</string>
+  <key>CFBundleDisplayName</key><string>GroundTab</string>
   <key>CFBundleIdentifier</key><string>com.browser-research.launcher</string>
   <key>CFBundleVersion</key><string>1</string>
   <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleExecutable</key><string>${xmlEscape(launcherPath.split(pathSeparator()).at(-1) ?? "Browser Research")}</string>
+  <key>CFBundleExecutable</key><string>${xmlEscape(launcherPath.split(pathSeparator()).at(-1) ?? "GroundTab")}</string>
 </dict></plist>\n`, { mode: 0o600 });
   }
 }
@@ -430,7 +430,7 @@ function launchBrowser({ browserPath, profileDir, extensionPath }) {
     detached: true,
     stdio: "ignore"
   });
-  child.once("error", (error) => process.stderr.write(`Could not open Browser Research: ${error.message}\n`));
+  child.once("error", (error) => process.stderr.write(`Could not open GroundTab: ${error.message}\n`));
   child.unref();
 }
 
@@ -451,13 +451,13 @@ function defaultProfileDir() {
 }
 
 function defaultBrowserRuntimeDir() {
-  if (platform() === "darwin") return resolve(homedir(), "Library", "Application Support", "Browser Research", "runtime");
+  if (platform() === "darwin") return resolve(homedir(), "Library", "Application Support", "GroundTab", "runtime");
   return resolve(process.env.XDG_DATA_HOME || resolve(homedir(), ".local", "share"), "browser-research", "runtime");
 }
 
 function defaultBrowserLauncherPath() {
-  if (platform() === "darwin") return resolve(homedir(), "Applications", "Browser Research.app", "Contents", "MacOS", "Browser Research");
-  return resolve(homedir(), ".local", "bin", "browser-research-browser");
+  if (platform() === "darwin") return resolve(homedir(), "Applications", "GroundTab.app", "Contents", "MacOS", "GroundTab");
+  return resolve(homedir(), ".local", "bin", "groundtab-browser");
 }
 
 function displayLauncherPath(launcherPath) {
@@ -561,7 +561,7 @@ async function checkMcpRuntime(brokerPath, configPath) {
       : "";
     return failure(`MCP runtime check failed: ${detail}${hint}`);
   }
-  return pass("MCP runtime starts and exposes the Browser Research tools");
+  return pass("MCP runtime starts and exposes the GroundTab tools");
 }
 
 async function checkPinnedNodeRuntime(launcherPath) {

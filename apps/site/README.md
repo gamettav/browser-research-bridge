@@ -1,6 +1,6 @@
 # @browser-research/site
 
-The landing site for Browser Research Bridge — a Next.js (App Router) app that
+The landing site for GroundTab — a Next.js (App Router) app that
 builds to a fully static export, so it deploys to GitHub Pages with no server.
 
 ## Commands
@@ -39,5 +39,5 @@ For a user/organization page or a custom domain served at the root, build withou
 
 - Replace the placeholder repo URL (`github.com/gamettav/browser-research-bridge`)
   in `app/page.tsx` (`REPO` constant) with the real repository.
-- Keep the product name "Browser Research Bridge" in anything user-facing —
+- Keep the product name "GroundTab" in anything user-facing —
   never the `vebicrolly` working-folder name.

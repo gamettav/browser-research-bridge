@@ -100,7 +100,7 @@ function connectOnce(port: number, origin: string): Promise<WebSocket> {
 }
 
 function fatal(error: unknown): void {
-  process.stderr.write(`Browser Research native host: ${errorMessage(error)}\n`);
+  process.stderr.write(`GroundTab native host: ${errorMessage(error)}\n`);
   process.exit(1);
 }
 

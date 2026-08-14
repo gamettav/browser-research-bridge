@@ -26,10 +26,10 @@ export const allowedToolIds = TOOLS.map((tool) => `mcp__${MCP_SERVER}__${tool}`)
 export const DESCRIPTION =
   "Research the web to answer a question, look something up, verify a claim, find sources, " +
   "check the latest on a topic, or read and summarize one or more URLs — through the local " +
-  "Browser Research bridge, which renders pages in your own Chrome when ordinary fetching is " +
+  "GroundTab bridge, which renders pages in your own Chrome when ordinary fetching is " +
   "blocked, incomplete, or needs JavaScript. Use when the user asks to research, look this up, " +
   "browse the web, search for sources, find out about, check online, read a link, or set up and " +
-  "connect the Browser Research extension. Do NOT use " +
+  "connect the GroundTab extension. Do NOT use " +
   "for coding, local files, math, or conversation that needs no web sources.";
 
 export const ARGUMENT_HINT = "[quick:|deep:] <question or URL(s)>";
@@ -37,7 +37,7 @@ export const ARGUMENT_HINT = "[quick:|deep:] <question or URL(s)>";
 export const CATEGORY = "Productivity";
 
 export const DEFAULT_PROMPT =
-  "Research this topic through Browser Research and answer with cited final source URLs.";
+  "Research this topic through GroundTab and answer with cited final source URLs.";
 
 // Harness-specific invocation tokens substituted into BODY.
 export const TOKENS = {
@@ -49,7 +49,7 @@ export const TOKENS = {
 export const BODY = `# Browse — web research
 
 Answer the user's question by researching the public web through the local Browser
-Research bridge. Invoke explicitly as \`{{INVOKE}} <question>\`, or activate automatically
+GroundTab bridge. Invoke explicitly as \`{{INVOKE}} <question>\`, or activate automatically
 when the user asks to research something, look something up, find sources, check the
 latest on a topic, verify a claim online, or read/summarize one or more URLs.
 
@@ -83,7 +83,7 @@ Run these steps in order. Keep concurrency low (at most two pages in flight).
    (and its tool limit); do not start a call when fewer than 5 seconds remain.
 2. **Connection check and first-run pairing.** Confirm the bridge is connected once, before
    the first page. If status says pairing is required and supplies a pairing code, show that
-   one-time code exactly, tell the user to enter it in the Browser Research Chrome extension,
+   one-time code exactly, tell the user to enter it in the GroundTab Chrome extension,
    mention its expiry, and stop until pairing completes. A pairing code is intentionally
    user-visible; never show the long-lived bridge token, port, origin, or raw status payload.
    If no pairing code is available, tell the user plainly to install/open the Chrome extension

@@ -8,7 +8,7 @@ const targets = await fetch(`http://127.0.0.1:${debuggerPort}/json/list`).then((
 const optionsTarget = targets.find(
   (target) => target.type === "page" && /^chrome-extension:\/\/[^/]+\/options\.html$/.test(target.url)
 );
-if (!optionsTarget) throw new Error("Browser Research extension options page was not found in the E2E Chrome profile");
+if (!optionsTarget) throw new Error("GroundTab extension options page was not found in the E2E Chrome profile");
 
 const extensionId = new URL(optionsTarget.url).hostname;
 const token = await existingToken(configPath) ?? randomBytes(32).toString("hex");

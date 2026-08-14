@@ -28,7 +28,7 @@ const WHEN_TO_USE =
   "read this link, summarize this URL, open this page";
 
 const SHORT_DESCRIPTION = "Research the web and answer with cited sources, through the local Chrome bridge.";
-const TOOL_DEPENDENCY_NOTE = "Read-only Browser Research tools: web search and rendered-page fetch.";
+const TOOL_DEPENDENCY_NOTE = "Read-only GroundTab tools: web search and rendered-page fetch.";
 
 // Directories fully owned by the generator; wiped before each run so renames and
 // relocations never leave stale artifacts behind (includes the old openai.yaml
@@ -68,9 +68,9 @@ function claudePluginManifest() {
   return `${JSON.stringify(
     {
       name: "br",
-      displayName: "Browser Research — browse",
-      version: "0.4.0",
-      description: "Portable /br:browse command: research the web through the local Browser Research bridge.",
+      displayName: "GroundTab — browse",
+      version: "0.4.1",
+      description: "Portable /br:browse command: research the web through the local GroundTab bridge.",
       author: { name: "Local developer" },
       keywords: ["research", "browse", "web", "mcp"]
     },

@@ -1,10 +1,10 @@
 {
   "name": "browser-research",
-  "displayName": "Browser Research",
-  "version": "0.4.0",
-  "description": "Research public web pages through the paired Browser Research Chrome extension.",
+  "displayName": "GroundTab",
+  "version": "0.4.1",
+  "description": "Research web pages through the paired GroundTab Chrome extension.",
   "author": {
-    "name": "Browser Research"
+    "name": "GroundTab"
   },
   "keywords": ["research", "browser", "mcp", "web"]
 }

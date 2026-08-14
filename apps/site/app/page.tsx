@@ -55,9 +55,9 @@ const never = [
 ];
 
 const steps = [
-  { title: "Add the Chrome extension", body: <>Install Browser Research from the Chrome Web Store like any other extension. No Developer Mode or separate Chrome download.</> },
-  { title: "Install it in your agent", body: <>Add the Browser Research plugin in Codex or Claude Code. The plugin launches its local MCP broker when the agent starts.</> },
-  { title: "Pair once", body: <>Ask the agent to <strong>set up Browser Research</strong>, then enter its short-lived code in the extension. No extension ID, token, or terminal setup.</> },
+  { title: "Add the Chrome extension", body: <>Install GroundTab from the Chrome Web Store like any other extension. No Developer Mode or separate Chrome download.</> },
+  { title: "Install it in your agent", body: <>Add the GroundTab plugin in Codex or Claude Code. The plugin launches its local MCP broker when the agent starts.</> },
+  { title: "Pair once", body: <>Ask the agent to <strong>set up GroundTab</strong>, then enter its short-lived code in the extension. No extension ID, token, or terminal setup.</> },
 ];
 
 const faqs = [
@@ -90,7 +90,7 @@ export default function Home() {
               <rect x="1.2" y="1.2" width="17.6" height="17.6" rx="4" stroke="currentColor" strokeWidth="1.4" />
               <path d="M6 10h8M11 7l3 3-3 3" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            Browser&nbsp;Research&nbsp;Bridge
+            GroundTab
           </div>
           <nav>
             <a className="hide-sm" href="#how">How it works</a>
@@ -252,7 +252,7 @@ export default function Home() {
 
       <footer>
         <div className="wrap">
-          <p className="note">Browser Research Bridge — a local, read-only research bridge for coding agents. Open source under Apache-2.0.</p>
+          <p className="note">GroundTab — a local, read-only research bridge for coding agents. Open source under Apache-2.0.</p>
           <nav>
             <a href={`${BASE_PATH}/privacy/`}>Privacy</a>
             <a href={`${BASE_PATH}/acceptable-use/`}>Acceptable use</a>
