@@ -16,7 +16,7 @@ import {
   type BrowserJob,
   type JobResultMessage,
   type ProgressEvent
-} from "@browser-research/protocol";
+} from "@groundtab/protocol";
 import { BROKER_BUILD_ID, BROKER_VERSION, BrokerProgressSchema, BrokerResponseSchema, type BrokerResponse, type BrokerStatus } from "./broker-protocol.js";
 
 type PendingRequest = {
@@ -182,7 +182,7 @@ export class BrokerClient {
 }
 
 function abortError(): Error {
-  const error = new Error("Browser research request was cancelled");
+  const error = new Error("GroundTab request was cancelled");
   error.name = "AbortError";
   return error;
 }
@@ -304,7 +304,7 @@ function startBroker(options: BrokerClientOptions): void {
 }
 
 async function startBrokerOnce(options: BrokerClientOptions): Promise<void> {
-  const runtimeRoot = join(tmpdir(), `browser-research-${typeof process.getuid === "function" ? process.getuid() : "user"}`);
+  const runtimeRoot = join(tmpdir(), `groundtab-${typeof process.getuid === "function" ? process.getuid() : "user"}`);
   await mkdir(runtimeRoot, { recursive: true, mode: 0o700 });
   const lockPath = join(runtimeRoot, `broker-${options.port}.lock`);
   let lock;
@@ -330,12 +330,12 @@ async function startBrokerOnce(options: BrokerClientOptions): Promise<void> {
 
 export function brokerEnvironment(options: BrokerClientOptions, parent: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
   const environment: NodeJS.ProcessEnv = {
-    BROWSER_RESEARCH_TOKEN: options.token,
-    BROWSER_RESEARCH_PORT: String(options.port),
-    BROWSER_RESEARCH_BROKER_IDLE_MS: String(options.brokerIdleMs)
+    GROUNDTAB_TOKEN: options.token,
+    GROUNDTAB_PORT: String(options.port),
+    GROUNDTAB_BROKER_IDLE_MS: String(options.brokerIdleMs)
   };
-  if (options.extensionId) environment.BROWSER_RESEARCH_EXTENSION_ID = options.extensionId;
-  if (options.configPath) environment.BROWSER_RESEARCH_CONFIG = options.configPath;
+  if (options.extensionId) environment.GROUNDTAB_EXTENSION_ID = options.extensionId;
+  if (options.configPath) environment.GROUNDTAB_CONFIG = options.configPath;
   for (const key of ["PATH", "SystemRoot", "WINDIR", "TEMP", "TMP", "TMPDIR", "LANG", "LC_ALL", "TZ"] as const) {
     if (parent[key]) environment[key] = parent[key];
   }

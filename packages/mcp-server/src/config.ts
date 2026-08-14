@@ -2,7 +2,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import { DEFAULT_PORT, isValidBridgeToken, safeDomain } from "@browser-research/protocol";
+import { DEFAULT_PORT, isValidBridgeToken, safeDomain } from "@groundtab/protocol";
 
 export const DEFAULT_SENSITIVE_DOMAINS = [
   "account.proton.me",
@@ -83,20 +83,20 @@ export type UrlPolicyDecision =
   | { allowed: false; domain: string | null; reason: "credentials" | "allowlist" | "denylist" | "sensitive" | "authenticated"; message: string };
 
 export async function loadServerConfig(environment: NodeJS.ProcessEnv = process.env): Promise<ServerConfig> {
-  const configPath = environment.BROWSER_RESEARCH_CONFIG ?? defaultConfigPath(environment);
-  const needsFile = Boolean(environment.BROWSER_RESEARCH_CONFIG) || !environment.BROWSER_RESEARCH_TOKEN || !environment.BROWSER_RESEARCH_EXTENSION_ID;
+  const configPath = environment.GROUNDTAB_CONFIG ?? defaultConfigPath(environment);
+  const needsFile = Boolean(environment.GROUNDTAB_CONFIG) || !environment.GROUNDTAB_TOKEN || !environment.GROUNDTAB_EXTENSION_ID;
   let file = needsFile ? await readConfigFile(configPath) : {};
-  let token = environment.BROWSER_RESEARCH_TOKEN ?? stringValue(file.token);
+  let token = environment.GROUNDTAB_TOKEN ?? stringValue(file.token);
   if (token === undefined) {
     await createInitialConfigFile(configPath);
     file = await readConfigFile(configPath);
     token = stringValue(file.token);
   }
-  const extensionId = environment.BROWSER_RESEARCH_EXTENSION_ID ?? stringValue(file.extensionId) ?? null;
-  const port = integerSetting(environment.BROWSER_RESEARCH_PORT ?? file.port ?? DEFAULT_PORT, "BROWSER_RESEARCH_PORT/config port", 1024, 65535);
+  const extensionId = environment.GROUNDTAB_EXTENSION_ID ?? stringValue(file.extensionId) ?? null;
+  const port = integerSetting(environment.GROUNDTAB_PORT ?? file.port ?? DEFAULT_PORT, "GROUNDTAB_PORT/config port", 1024, 65535);
   const brokerIdleMs = integerSetting(
-    environment.BROWSER_RESEARCH_BROKER_IDLE_MS ?? file.brokerIdleMs ?? 10 * 60_000,
-    "BROWSER_RESEARCH_BROKER_IDLE_MS/config brokerIdleMs",
+    environment.GROUNDTAB_BROKER_IDLE_MS ?? file.brokerIdleMs ?? 10 * 60_000,
+    "GROUNDTAB_BROKER_IDLE_MS/config brokerIdleMs",
     1_000,
     24 * 60 * 60_000
   );
@@ -109,58 +109,58 @@ export async function loadServerConfig(environment: NodeJS.ProcessEnv = process.
   }
 
   const domainAllowlist = domainListSetting(
-    environment.BROWSER_RESEARCH_DOMAIN_ALLOWLIST ?? file.domainAllowlist ?? [],
-    "BROWSER_RESEARCH_DOMAIN_ALLOWLIST/config domainAllowlist"
+    environment.GROUNDTAB_DOMAIN_ALLOWLIST ?? file.domainAllowlist ?? [],
+    "GROUNDTAB_DOMAIN_ALLOWLIST/config domainAllowlist"
   );
   const domainDenylist = domainListSetting(
-    environment.BROWSER_RESEARCH_DOMAIN_DENYLIST ?? file.domainDenylist ?? [],
-    "BROWSER_RESEARCH_DOMAIN_DENYLIST/config domainDenylist"
+    environment.GROUNDTAB_DOMAIN_DENYLIST ?? file.domainDenylist ?? [],
+    "GROUNDTAB_DOMAIN_DENYLIST/config domainDenylist"
   );
   const sensitiveDomainDenylist = domainListSetting(
-    environment.BROWSER_RESEARCH_SENSITIVE_DOMAIN_DENYLIST ?? file.sensitiveDomainDenylist ?? DEFAULT_SENSITIVE_DOMAINS,
-    "BROWSER_RESEARCH_SENSITIVE_DOMAIN_DENYLIST/config sensitiveDomainDenylist"
+    environment.GROUNDTAB_SENSITIVE_DOMAIN_DENYLIST ?? file.sensitiveDomainDenylist ?? DEFAULT_SENSITIVE_DOMAINS,
+    "GROUNDTAB_SENSITIVE_DOMAIN_DENYLIST/config sensitiveDomainDenylist"
   );
   const allowAuthenticatedSources = booleanSetting(
-    environment.BROWSER_RESEARCH_ALLOW_AUTHENTICATED_SOURCES ?? file.allowAuthenticatedSources ?? false,
-    "BROWSER_RESEARCH_ALLOW_AUTHENTICATED_SOURCES/config allowAuthenticatedSources"
+    environment.GROUNDTAB_ALLOW_AUTHENTICATED_SOURCES ?? file.allowAuthenticatedSources ?? false,
+    "GROUNDTAB_ALLOW_AUTHENTICATED_SOURCES/config allowAuthenticatedSources"
   );
   const maxPagesPerSession = integerSetting(
-    environment.BROWSER_RESEARCH_MAX_PAGES_PER_SESSION ?? file.maxPagesPerSession ?? 50,
-    "BROWSER_RESEARCH_MAX_PAGES_PER_SESSION/config maxPagesPerSession",
+    environment.GROUNDTAB_MAX_PAGES_PER_SESSION ?? file.maxPagesPerSession ?? 50,
+    "GROUNDTAB_MAX_PAGES_PER_SESSION/config maxPagesPerSession",
     1,
     10_000
   );
   const maxConcurrentFetches = integerSetting(
-    environment.BROWSER_RESEARCH_MAX_CONCURRENT_FETCHES ?? file.maxConcurrentFetches ?? 4,
-    "BROWSER_RESEARCH_MAX_CONCURRENT_FETCHES/config maxConcurrentFetches",
+    environment.GROUNDTAB_MAX_CONCURRENT_FETCHES ?? file.maxConcurrentFetches ?? 4,
+    "GROUNDTAB_MAX_CONCURRENT_FETCHES/config maxConcurrentFetches",
     1,
     100
   );
   const maxExtractedChars = integerSetting(
-    environment.BROWSER_RESEARCH_MAX_EXTRACTED_CHARS ?? file.maxExtractedChars ?? 500_000,
-    "BROWSER_RESEARCH_MAX_EXTRACTED_CHARS/config maxExtractedChars",
+    environment.GROUNDTAB_MAX_EXTRACTED_CHARS ?? file.maxExtractedChars ?? 500_000,
+    "GROUNDTAB_MAX_EXTRACTED_CHARS/config maxExtractedChars",
     1_000,
     500_000
   );
   const redactedUrlParameters = parameterListSetting(
-    environment.BROWSER_RESEARCH_REDACT_URL_PARAMETERS ?? file.redactedUrlParameters ?? DEFAULT_REDACTED_URL_PARAMETERS,
-    "BROWSER_RESEARCH_REDACT_URL_PARAMETERS/config redactedUrlParameters"
+    environment.GROUNDTAB_REDACT_URL_PARAMETERS ?? file.redactedUrlParameters ?? DEFAULT_REDACTED_URL_PARAMETERS,
+    "GROUNDTAB_REDACT_URL_PARAMETERS/config redactedUrlParameters"
   );
   const captureRetentionCount = integerSetting(
-    environment.BROWSER_RESEARCH_CAPTURE_RETENTION_COUNT ?? file.captureRetentionCount ?? 50,
-    "BROWSER_RESEARCH_CAPTURE_RETENTION_COUNT/config captureRetentionCount",
+    environment.GROUNDTAB_CAPTURE_RETENTION_COUNT ?? file.captureRetentionCount ?? 50,
+    "GROUNDTAB_CAPTURE_RETENTION_COUNT/config captureRetentionCount",
     0,
     10_000
   );
   const captureRetentionMs = integerSetting(
-    environment.BROWSER_RESEARCH_CAPTURE_RETENTION_MS ?? file.captureRetentionMs ?? 0,
-    "BROWSER_RESEARCH_CAPTURE_RETENTION_MS/config captureRetentionMs",
+    environment.GROUNDTAB_CAPTURE_RETENTION_MS ?? file.captureRetentionMs ?? 0,
+    "GROUNDTAB_CAPTURE_RETENTION_MS/config captureRetentionMs",
     0,
     30 * 24 * 60 * 60_000
   );
   const doNotRetain = booleanSetting(
-    environment.BROWSER_RESEARCH_DO_NOT_RETAIN ?? file.doNotRetain ?? false,
-    "BROWSER_RESEARCH_DO_NOT_RETAIN/config doNotRetain"
+    environment.GROUNDTAB_DO_NOT_RETAIN ?? file.doNotRetain ?? false,
+    "GROUNDTAB_DO_NOT_RETAIN/config doNotRetain"
   ) || captureRetentionCount === 0;
 
   return {
@@ -239,7 +239,7 @@ export function matchesDomainList(domain: string, configuredDomains: readonly st
 
 export function defaultConfigPath(environment: NodeJS.ProcessEnv = process.env): string {
   const configRoot = environment.XDG_CONFIG_HOME || join(environment.HOME || homedir(), ".config");
-  return join(configRoot, "browser-research", "config.json");
+  return join(configRoot, "groundtab", "config.json");
 }
 
 async function readConfigFile(path: string): Promise<ConfigFile> {
@@ -248,7 +248,7 @@ async function readConfigFile(path: string): Promise<ConfigFile> {
     contents = await readFile(path, "utf8");
   } catch (error) {
     if (isNodeError(error) && error.code === "ENOENT") return {};
-    throw new Error(`Could not read browser research config at ${path}: ${errorMessage(error)}`);
+    throw new Error(`Could not read GroundTab config at ${path}: ${errorMessage(error)}`);
   }
 
   try {
@@ -257,7 +257,7 @@ async function readConfigFile(path: string): Promise<ConfigFile> {
     await warnIfBroadlyReadable(path);
     return parsed as ConfigFile;
   } catch (error) {
-    throw new Error(`Invalid browser research config at ${path}: ${errorMessage(error)}`);
+    throw new Error(`Invalid GroundTab config at ${path}: ${errorMessage(error)}`);
   }
 }
 

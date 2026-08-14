@@ -19,9 +19,9 @@ import {
   pairingProofHex,
   pairingSubmitPayload,
   serverProofPayload
-} from "@browser-research/protocol";
+} from "@groundtab/protocol";
 
-const directory = await mkdtemp(join(tmpdir(), "browser-research-pairing-e2e-"));
+const directory = await mkdtemp(join(tmpdir(), "groundtab-pairing-e2e-"));
 const configPath = join(directory, "config.json");
 const extensionId = "abcdefghijklmnopabcdefghijklmnop";
 const bridgePort = await availablePort();
@@ -30,14 +30,14 @@ const transport = new StdioClientTransport({
   args: ["dist/index.cjs"],
   env: {
     ...process.env,
-    BROWSER_RESEARCH_CONFIG: configPath,
-    BROWSER_RESEARCH_PORT: String(bridgePort),
-    BROWSER_RESEARCH_BROKER_IDLE_MS: "1000"
+    GROUNDTAB_CONFIG: configPath,
+    GROUNDTAB_PORT: String(bridgePort),
+    GROUNDTAB_BROKER_IDLE_MS: "1000"
   },
   stderr: "pipe"
 });
 transport.stderr?.on("data", (chunk) => process.stderr.write(chunk));
-const client = new Client({ name: "browser-research-pairing-e2e", version: "0.4.1" });
+const client = new Client({ name: "groundtab-pairing-e2e", version: "0.4.2" });
 
 try {
   await client.connect(transport);
@@ -83,7 +83,7 @@ try {
     nonce: challenge.nonce,
     protocolVersion: PROTOCOL_VERSION,
     clientId: extensionId,
-    clientVersion: "0.4.1",
+    clientVersion: "0.4.2",
     clientBuildId: BRIDGE_BUILD_ID,
     proof: await hmacSha256Hex(
       paired.token,
@@ -108,14 +108,14 @@ try {
   await new Promise((resolveDelay) => setTimeout(resolveDelay, 1_250));
   const tempRoot = resolve(tmpdir()) + sep;
   const resolvedDirectory = resolve(directory);
-  if (!resolvedDirectory.startsWith(tempRoot) || !basename(resolvedDirectory).startsWith("browser-research-pairing-e2e-")) {
+  if (!resolvedDirectory.startsWith(tempRoot) || !basename(resolvedDirectory).startsWith("groundtab-pairing-e2e-")) {
     throw new Error("Refusing to remove an unexpected pairing test directory");
   }
   await rm(resolvedDirectory, { recursive: true, force: true });
 }
 
 function hello(hasToken) {
-  return { type: "extension_hello", extensionId, hasToken, clientVersion: "0.4.1", clientBuildId: BRIDGE_BUILD_ID };
+  return { type: "extension_hello", extensionId, hasToken, clientVersion: "0.4.2", clientBuildId: BRIDGE_BUILD_ID };
 }
 
 async function openExtensionSocket(port) {

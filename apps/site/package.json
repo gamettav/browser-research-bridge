@@ -1,13 +1,13 @@
 {
-  "name": "@browser-research/site",
-  "version": "0.4.1",
+  "name": "@groundtab/site",
+  "version": "0.4.2",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "echo \"@browser-research/site has no unit tests\""
+    "test": "echo \"@groundtab/site has no unit tests\""
   },
   "dependencies": {
     "next": "^15.1.6",

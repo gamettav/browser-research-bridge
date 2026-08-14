@@ -1,6 +1,6 @@
 {
-  "name": "@browser-research/protocol",
-  "version": "0.4.1",
+  "name": "@groundtab/protocol",
+  "version": "0.4.2",
   "private": true,
   "type": "module",
   "exports": "./src/index.ts",

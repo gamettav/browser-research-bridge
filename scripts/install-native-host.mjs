@@ -6,7 +6,7 @@ import { homedir, platform } from "node:os";
 import { dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const HOST_NAME = "com.browser_research.bridge";
+const HOST_NAME = "com.groundtab.bridge";
 const args = parseArgs(process.argv.slice(2));
 if (!args.extensionId || !/^[a-p]{32}$/.test(args.extensionId)) {
   fail("Pass --extension-id followed by Chrome's 32-character extension ID (letters a-p only).");
@@ -24,7 +24,7 @@ const manifestDir = args.manifestDir ? resolve(args.manifestDir) : defaultManife
 await mkdir(manifestDir, { recursive: true, mode: 0o700 });
 const manifestPath = resolve(manifestDir, `${HOST_NAME}.json`);
 const launcherPath = resolve(manifestDir, HOST_NAME);
-const runtimeDir = resolve(manifestDir, "browser-research-host");
+const runtimeDir = resolve(manifestDir, "groundtab-host");
 const installedHostPath = resolve(runtimeDir, "native-host.cjs");
 const installedBrokerPath = resolve(runtimeDir, "broker.cjs");
 const installedExtensionPath = resolve(runtimeDir, "extension");
@@ -41,7 +41,7 @@ if (args.extensionPath) {
 }
 await chmod(installedHostPath, 0o600);
 await chmod(installedBrokerPath, 0o600);
-const configLine = configPath ? `export BROWSER_RESEARCH_CONFIG=${shellQuote(configPath)}\n` : "";
+const configLine = configPath ? `export GROUNDTAB_CONFIG=${shellQuote(configPath)}\n` : "";
 const launcher = `#!/bin/sh\n${configLine}exec ${shellQuote(process.execPath)} ${shellQuote(installedHostPath)} "$@"\n`;
 await writeFile(launcherPath, launcher, { mode: 0o700 });
 await chmod(launcherPath, 0o700);

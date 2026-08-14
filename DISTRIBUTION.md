@@ -30,7 +30,7 @@ The public manifest does not request Native Messaging and contains no developer-
 
 ## Codex directory
 
-- [ ] Run the plugin validator against `integrations/codex/browser-research`.
+- [ ] Run the plugin validator against `integrations/codex/groundtab`.
 - [ ] Confirm the plugin contains only its skill, MCP manifest, bundled server/broker, and optional probe—not the Chrome extension or legacy installer.
 - [ ] Test install/uninstall, implicit `$browse` activation, explicit setup intent, upgrade, IDE, CLI, and desktop surfaces.
 - [ ] Submit the plugin through the Codex plugin publishing flow.
@@ -38,7 +38,7 @@ The public manifest does not request Native Messaging and contains no developer-
 
 ## Claude Code marketplace
 
-- [ ] Validate `integrations/claude/browser-research` and the `/browse` command/user-skill artifacts.
+- [ ] Validate `integrations/claude/groundtab` and the `/browse` command/user-skill artifacts.
 - [ ] Test interactive and noninteractive sessions, install/uninstall, MCP startup, pairing, permissions, and upgrade behavior.
 - [ ] Publish through an approved Claude Code marketplace and record its install URL as `NEXT_PUBLIC_CLAUDE_PLUGIN_URL`.
 

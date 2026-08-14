@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 // Applies a saved theme before first paint so an explicit light/dark choice
 // never flashes the opposite theme on load.
-const noFlashTheme = `(function(){try{var t=localStorage.getItem('brb-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();`;
+const noFlashTheme = `(function(){try{var t=localStorage.getItem('groundtab-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();`;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

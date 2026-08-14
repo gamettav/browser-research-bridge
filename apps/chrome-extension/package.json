@@ -1,6 +1,6 @@
 {
-  "name": "@browser-research/chrome-extension",
-  "version": "0.4.1",
+  "name": "@groundtab/chrome-extension",
+  "version": "0.4.2",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@browser-research/protocol": "workspace:*",
+    "@groundtab/protocol": "workspace:*",
     "@mozilla/readability": "^0.6.0",
     "turndown": "^7.2.0"
   },

@@ -28,7 +28,7 @@ export default function Privacy() {
       <p>All-sites access allows research without requiring a manual click for every page. You can restrict the extension&apos;s site access in Chrome; research outside those domains will fail. Sensitive banking, healthcare, administration, email, and password-manager domains are denied by default by the local research policy.</p>
 
       <h2>Contact</h2>
-      <p>For privacy or deletion questions, open a <a href="https://github.com/gamettav/browser-research-bridge/issues">support issue</a> in the public GroundTab repository. Do not report a security vulnerability in a public issue. Because data is not held by a GroundTab cloud service, clearing the extension and local agent configuration removes the product&apos;s persistent local data.</p>
+      <p>For privacy or deletion questions, open a <a href="https://github.com/gamettav/groundtab/issues">support issue</a> in the public GroundTab repository. Do not report a security vulnerability in a public issue. Because data is not held by a GroundTab cloud service, clearing the extension and local agent configuration removes the product&apos;s persistent local data.</p>
 
       <a className="legal-back" href={`${BASE_PATH}/`}>← Back to GroundTab</a>
     </main>

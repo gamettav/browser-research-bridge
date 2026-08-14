@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import type { ProgressEvent, ResearchPhase } from "@browser-research/protocol";
+import type { ProgressEvent, ResearchPhase } from "@groundtab/protocol";
 import { classifyThrown, formatPhase, makeReporter, mapErrorCode, searchDomain } from "../src/progress.js";
 
 type Sent = { method: string; params: Record<string, unknown> };

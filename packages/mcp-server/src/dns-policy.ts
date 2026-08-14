@@ -1,5 +1,5 @@
 import { lookup } from "node:dns/promises";
-import { isAllowedPublicWebUrl, isPublicIpAddress } from "@browser-research/protocol";
+import { isAllowedPublicWebUrl, isPublicIpAddress } from "@groundtab/protocol";
 
 export type DnsLookup = (hostname: string) => Promise<Array<{ address: string }>>;
 

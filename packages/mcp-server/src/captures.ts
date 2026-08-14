@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import type { PageExtraction } from "@browser-research/protocol";
+import type { PageExtraction } from "@groundtab/protocol";
 import { DEFAULT_REDACTED_URL_PARAMETERS } from "./config.js";
 
 export type CaptureBlock = {

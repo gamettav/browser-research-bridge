@@ -7,7 +7,7 @@ import { arch, homedir, platform } from "node:os";
 import { delimiter, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const HOST_NAME = "com.browser_research.bridge";
+const HOST_NAME = "com.groundtab.bridge";
 const CFT_VERSIONS_URL = "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json";
 const MAX_CFT_ARCHIVE_BYTES = 500 * 1024 * 1024;
 await main().catch((error) => {
@@ -34,7 +34,7 @@ async function install(options) {
   const configPath = resolve(options.configPath ?? defaultConfigPath());
   const profileDir = resolve(options.profileDir ?? defaultProfileDir());
   const manifestDir = resolve(options.manifestDir ?? resolve(profileDir, "NativeMessagingHosts"));
-  const installedExtensionPath = resolve(manifestDir, "browser-research-host", "extension");
+  const installedExtensionPath = resolve(manifestDir, "groundtab-host", "extension");
   const launcherPath = resolve(options.launcherPath ?? defaultBrowserLauncherPath());
 
   await setup({
@@ -118,7 +118,7 @@ async function doctor(options) {
     : defaultManifestDir(browser)));
   const manifestPath = resolve(manifestDir, `${HOST_NAME}.json`);
   const launcherPath = resolve(manifestDir, HOST_NAME);
-  const runtimeDir = resolve(manifestDir, "browser-research-host");
+  const runtimeDir = resolve(manifestDir, "groundtab-host");
   const checks = [];
 
   checks.push(await checkPrivateFile(configPath, "Configuration", 0o077));
@@ -166,7 +166,7 @@ async function uninstall(options) {
     : defaultManifestDir(browser)));
   const manifestPath = resolve(manifestDir, `${HOST_NAME}.json`);
   const launcherPath = resolve(manifestDir, HOST_NAME);
-  const runtimeDir = resolve(manifestDir, "browser-research-host");
+  const runtimeDir = resolve(manifestDir, "groundtab-host");
   const nativeHostPath = resolve(runtimeDir, "native-host.cjs");
   const brokerPath = resolve(runtimeDir, "broker.cjs");
   const installedExtensionPath = resolve(runtimeDir, "extension");
@@ -417,7 +417,7 @@ async function createBrowserLauncher({ browserPath, profileDir, extensionPath, l
 <plist version="1.0"><dict>
   <key>CFBundleName</key><string>GroundTab</string>
   <key>CFBundleDisplayName</key><string>GroundTab</string>
-  <key>CFBundleIdentifier</key><string>com.browser-research.launcher</string>
+  <key>CFBundleIdentifier</key><string>com.groundtab.launcher</string>
   <key>CFBundleVersion</key><string>1</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleExecutable</key><string>${xmlEscape(launcherPath.split(pathSeparator()).at(-1) ?? "GroundTab")}</string>
@@ -447,12 +447,12 @@ function browserArguments(profileDir, extensionPath) {
 }
 
 function defaultProfileDir() {
-  return resolve(process.env.XDG_CONFIG_HOME || resolve(homedir(), ".config"), "browser-research", "chrome-profile");
+  return resolve(process.env.XDG_CONFIG_HOME || resolve(homedir(), ".config"), "groundtab", "chrome-profile");
 }
 
 function defaultBrowserRuntimeDir() {
   if (platform() === "darwin") return resolve(homedir(), "Library", "Application Support", "GroundTab", "runtime");
-  return resolve(process.env.XDG_DATA_HOME || resolve(homedir(), ".local", "share"), "browser-research", "runtime");
+  return resolve(process.env.XDG_DATA_HOME || resolve(homedir(), ".local", "share"), "groundtab", "runtime");
 }
 
 function defaultBrowserLauncherPath() {
@@ -478,7 +478,7 @@ function xmlEscape(value) {
 }
 
 function defaultConfigPath() {
-  return resolve(process.env.XDG_CONFIG_HOME || resolve(process.env.HOME || homedir(), ".config"), "browser-research", "config.json");
+  return resolve(process.env.XDG_CONFIG_HOME || resolve(process.env.HOME || homedir(), ".config"), "groundtab", "config.json");
 }
 
 function defaultManifestDir(browser = "chrome") {
@@ -548,10 +548,10 @@ async function checkMcpRuntime(brokerPath, configPath) {
     timeout: 12_000,
     env: {
       ...process.env,
-      BROWSER_RESEARCH_CONFIG: configPath,
-      BROWSER_RESEARCH_BROKER_PATH: brokerPath,
-      BROWSER_RESEARCH_SERVER_PATH: serverPath,
-      BROWSER_RESEARCH_BROKER_IDLE_MS: "1000"
+      GROUNDTAB_CONFIG: configPath,
+      GROUNDTAB_BROKER_PATH: brokerPath,
+      GROUNDTAB_SERVER_PATH: serverPath,
+      GROUNDTAB_BROKER_IDLE_MS: "1000"
     }
   });
   if (probe.status !== 0) {
@@ -673,10 +673,10 @@ function failure(message) { return { ok: false, message }; }
 
 function usage(error) {
   const help = `Usage:
-  browser-research.mjs install [--browser chrome-for-testing] [--browser-path PATH] [--no-launch]
-  browser-research.mjs open [--browser chrome-for-testing]
-  browser-research.mjs doctor [--browser chrome-for-testing]
-  browser-research.mjs uninstall [--browser chrome-for-testing] [--remove-config]
+  groundtab.mjs install [--browser chrome-for-testing] [--browser-path PATH] [--no-launch]
+  groundtab.mjs open [--browser chrome-for-testing]
+  groundtab.mjs doctor [--browser chrome-for-testing]
+  groundtab.mjs uninstall [--browser chrome-for-testing] [--remove-config]
 
 Advanced: --extension-id ID --extension-path PATH --profile-dir PATH --launcher-path PATH --browser-runtime-dir PATH --config-path PATH --manifest-dir PATH --host-path PATH`;
   if (error) throw new Error(`${error}\n${help}`);

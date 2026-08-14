@@ -1,4 +1,4 @@
-import { normalizePairingCode } from "@browser-research/protocol";
+import { normalizePairingCode } from "@groundtab/protocol";
 
 const form = requireElement<HTMLFormElement>("pairing-form");
 const codeInput = requireElement<HTMLInputElement>("pairing-code");

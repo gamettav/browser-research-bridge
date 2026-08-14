@@ -1,16 +1,16 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
-const configPath = process.env.BROWSER_RESEARCH_E2E_CONFIG ?? "/private/tmp/vebicrolly-browser-research-config.json";
+const configPath = process.env.GROUNDTAB_E2E_CONFIG ?? "/private/tmp/groundtab-e2e-config.json";
 const transport = new StdioClientTransport({
   command: "node",
   args: ["dist/index.cjs"],
-  env: { ...process.env, BROWSER_RESEARCH_CONFIG: configPath },
+  env: { ...process.env, GROUNDTAB_CONFIG: configPath },
   stderr: "pipe"
 });
 transport.stderr?.on("data", () => undefined);
 
-const client = new Client({ name: "browser-research-e2e", version: "0.1.0" });
+const client = new Client({ name: "groundtab-e2e", version: "0.1.0" });
 const summary = { connected: false, fetches: [], search: null, blockedUrls: [] };
 
 try {

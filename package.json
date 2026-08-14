@@ -1,6 +1,6 @@
 {
-  "name": "browser-research-bridge",
-  "version": "0.4.1",
+  "name": "groundtab",
+  "version": "0.4.2",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.15.1",
@@ -9,18 +9,19 @@
     "generate:skills": "node scripts/generate-skills.mjs",
     "validate:skills": "node scripts/validate-skills.mjs",
     "evaluate:research-quality": "node scripts/evaluate-research-quality.mjs",
+    "benchmark:fetch": "pnpm build:extension && node scripts/benchmark-fetch.mjs",
     "install:skills": "node scripts/install-skills.mjs",
-    "build:server": "pnpm --filter @browser-research/mcp-server build",
-    "build:extension": "pnpm --filter @browser-research/chrome-extension build",
+    "build:server": "pnpm --filter @groundtab/mcp-server build",
+    "build:extension": "pnpm --filter @groundtab/chrome-extension build",
     "package:extension": "pnpm build:extension && node scripts/package-extension.mjs",
     "package:plugins": "node scripts/package-plugins.mjs",
     "e2e:configure": "node scripts/e2e-configure.mjs",
-    "e2e:browser": "pnpm build && pnpm e2e:configure && pnpm --filter @browser-research/mcp-server e2e:concurrent",
-    "e2e:native": "pnpm build && pnpm --filter @browser-research/mcp-server e2e:native",
+    "e2e:browser": "pnpm build && pnpm e2e:configure && pnpm --filter @groundtab/mcp-server e2e:concurrent",
+    "e2e:native": "pnpm build && pnpm --filter @groundtab/mcp-server e2e:native",
     "test:lifecycle": "node scripts/test-lifecycle.mjs",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
-    "check": "pnpm validate:skills && pnpm evaluate:research-quality && pnpm typecheck && pnpm test && pnpm build && pnpm --filter @browser-research/mcp-server e2e:pairing"
+    "check": "pnpm validate:skills && pnpm evaluate:research-quality && pnpm typecheck && pnpm test && pnpm build && pnpm --filter @groundtab/mcp-server e2e:pairing"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",

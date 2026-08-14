@@ -26,7 +26,7 @@ import {
   serverProofPayload,
   type BrowserJob,
   type ResearchPhase
-} from "@browser-research/protocol";
+} from "@groundtab/protocol";
 import { unwrapExtractionResult } from "./extraction-result.js";
 import {
   canonicalFetchKey,
@@ -57,7 +57,7 @@ let reconnectAttempt = 0;
 const pendingNavigationChecks = new Map<string, { resolve: () => void; reject: (error: Error) => void; timer: number }>();
 const inFlightStaticFetches = new Map<string, Promise<StaticFetchPayload>>();
 const fastFetchCompatibility = new DomainCompatibilityMemory();
-const RECONNECT_ALARM = "browser-research-reconnect";
+const RECONNECT_ALARM = "groundtab-reconnect";
 const MAX_STATIC_BODY_BYTES = 5_000_000;
 const STATIC_FETCH_TIMEOUT_MS = 12_000;
 let creatingOffscreenDocument: Promise<void> | null = null;

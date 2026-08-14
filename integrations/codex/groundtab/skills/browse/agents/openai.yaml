@@ -6,7 +6,7 @@ interface:
 dependencies:
   tools:
     - type: mcp
-      value: browser-research
+      value: groundtab
       description: "Read-only GroundTab tools: web search and rendered-page fetch."
 policy:
   allow_implicit_invocation: true

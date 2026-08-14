@@ -4,10 +4,10 @@
 //
 // Outputs (all GENERATED — do not hand-edit):
 //   integrations/claude/user-skills/browse/SKILL.md              Claude user skill  (/browse, implicit)
-//   integrations/claude/br/.claude-plugin/plugin.json            portable Claude plugin `br`
-//   integrations/claude/br/commands/browse.md                    Claude plugin command  (/br:browse)
-//   integrations/codex/browser-research/skills/browse/SKILL.md            Codex skill  ($browse)
-//   integrations/codex/browser-research/skills/browse/agents/openai.yaml  Codex skill UI metadata
+//   integrations/claude/gt/.claude-plugin/plugin.json            portable Claude plugin `gt`
+//   integrations/claude/gt/commands/browse.md                    Claude plugin command  (/gt:browse)
+//   integrations/codex/groundtab/skills/browse/SKILL.md          Codex skill  ($browse)
+//   integrations/codex/groundtab/skills/browse/agents/openai.yaml  Codex skill UI metadata
 //
 // `buildArtifacts()` is exported (pure, no fs) so scripts/validate-skills.mjs can
 // assert the committed files match what the canonical definition produces.
@@ -35,9 +35,9 @@ const TOOL_DEPENDENCY_NOTE = "Read-only GroundTab tools: web search and rendered
 // location under the plugin root).
 const OWNED_DIRS = [
   "integrations/claude/user-skills/browse",
-  "integrations/claude/br",
-  "integrations/codex/browser-research/skills/browse",
-  "integrations/codex/browser-research/agents"
+  "integrations/claude/gt",
+  "integrations/codex/groundtab/skills/browse",
+  "integrations/codex/groundtab/agents"
 ];
 
 // Double-quote a scalar so it is always valid YAML regardless of its content
@@ -67,10 +67,10 @@ function claudeUserSkill() {
 function claudePluginManifest() {
   return `${JSON.stringify(
     {
-      name: "br",
+      name: "gt",
       displayName: "GroundTab — browse",
-      version: "0.4.1",
-      description: "Portable /br:browse command: research the web through the local GroundTab bridge.",
+      version: "0.4.2",
+      description: "Portable /gt:browse command: research the web through the local GroundTab bridge.",
       author: { name: "Local developer" },
       keywords: ["research", "browse", "web", "mcp"]
     },
@@ -123,10 +123,10 @@ function codexAgents() {
 export function buildArtifacts() {
   return [
     { path: "integrations/claude/user-skills/browse/SKILL.md", content: claudeUserSkill() },
-    { path: "integrations/claude/br/.claude-plugin/plugin.json", content: claudePluginManifest() },
-    { path: "integrations/claude/br/commands/browse.md", content: claudePluginCommand() },
-    { path: "integrations/codex/browser-research/skills/browse/SKILL.md", content: codexSkill() },
-    { path: "integrations/codex/browser-research/skills/browse/agents/openai.yaml", content: codexAgents() }
+    { path: "integrations/claude/gt/.claude-plugin/plugin.json", content: claudePluginManifest() },
+    { path: "integrations/claude/gt/commands/browse.md", content: claudePluginCommand() },
+    { path: "integrations/codex/groundtab/skills/browse/SKILL.md", content: codexSkill() },
+    { path: "integrations/codex/groundtab/skills/browse/agents/openai.yaml", content: codexAgents() }
   ];
 }
 

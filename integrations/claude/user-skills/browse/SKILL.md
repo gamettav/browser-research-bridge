@@ -3,7 +3,7 @@ name: browse
 description: "Research the web to answer a question, look something up, verify a claim, find sources, check the latest on a topic, or read and summarize one or more URLs — through the local GroundTab bridge, which renders pages in your own Chrome when ordinary fetching is blocked, incomplete, or needs JavaScript. Use when the user asks to research, look this up, browse the web, search for sources, find out about, check online, read a link, or set up and connect the GroundTab extension. Do NOT use for coding, local files, math, or conversation that needs no web sources."
 when_to_use: "research this, research X, look this up, look up, find sources on, find out about, browse the web, search the web for, check the latest on, what's new with, verify online, read this link, summarize this URL, open this page"
 argument-hint: "[quick:|deep:] <question or URL(s)>"
-allowed-tools: "mcp__browser-research__bridge_status mcp__browser-research__search_web mcp__browser-research__fetch_rendered_page mcp__browser-research__list_captures mcp__browser-research__read_capture mcp__browser-research__export_audit_report"
+allowed-tools: "mcp__groundtab__bridge_status mcp__groundtab__search_web mcp__groundtab__fetch_rendered_page mcp__groundtab__list_captures mcp__groundtab__read_capture mcp__groundtab__export_audit_report"
 ---
 
 <!-- GENERATED from skills-src/browse.mjs by scripts/generate-skills.mjs. Do not edit; edit the canonical file and run `pnpm generate:skills`. -->

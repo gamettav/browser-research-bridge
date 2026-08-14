@@ -104,13 +104,13 @@ function sanitizedClone(): Document {
       style.visibility === "hidden" ||
       Number(style.opacity) === 0
     ) {
-      copy.setAttribute("data-browser-research-remove", "true");
+      copy.setAttribute("data-groundtab-remove", "true");
     }
   }
 
   clone.querySelectorAll([
     "script", "style", "noscript", "template", "svg", "canvas", "form", "input", "textarea", "select", "button",
-    "[hidden]", '[aria-hidden="true"]', "[contenteditable]", '[data-browser-research-remove="true"]'
+    "[hidden]", '[aria-hidden="true"]', "[contenteditable]", '[data-groundtab-remove="true"]'
   ].join(",")).forEach((element) => element.remove());
   return clone;
 }

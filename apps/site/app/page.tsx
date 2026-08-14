@@ -1,6 +1,6 @@
 import { ThemeToggle } from "../components/ThemeToggle";
 
-const REPO = process.env.NEXT_PUBLIC_REPOSITORY_URL ?? "https://github.com/gamettav/browser-research-bridge";
+const REPO = process.env.NEXT_PUBLIC_REPOSITORY_URL ?? "https://github.com/gamettav/groundtab";
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 const CHROME_STORE_URL = process.env.NEXT_PUBLIC_CHROME_WEB_STORE_URL;
@@ -131,7 +131,7 @@ export default function Home() {
             <div className="term" role="img" aria-label="Example fetch_rendered_page tool call returning clean Markdown and the final URL">
               <div className="term-bar">
                 <i /><i /><i />
-                <span className="title">codex · browser-research · fetch_rendered_page</span>
+                <span className="title">codex · groundtab · fetch_rendered_page</span>
               </div>
               <div className="term-body">
                 <pre dangerouslySetInnerHTML={{ __html: TERMINAL_HTML }} />

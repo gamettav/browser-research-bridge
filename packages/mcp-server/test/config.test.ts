@@ -29,11 +29,11 @@ const defaultPolicy = {
 
 describe("loadServerConfig", () => {
   it("loads an installed plugin's shared config file", async () => {
-    const directory = await mkdtemp(join(tmpdir(), "browser-research-config-"));
+    const directory = await mkdtemp(join(tmpdir(), "groundtab-config-"));
     const path = join(directory, "config.json");
     await writeFile(path, JSON.stringify({ token, extensionId, port: 32190 }));
     await chmod(path, 0o600);
-    await expect(loadServerConfig({ BROWSER_RESEARCH_CONFIG: path })).resolves.toEqual({
+    await expect(loadServerConfig({ GROUNDTAB_CONFIG: path })).resolves.toEqual({
       token,
       extensionId,
       port: 32190,
@@ -45,16 +45,16 @@ describe("loadServerConfig", () => {
 
   it("prefers explicit environment variables", async () => {
     await expect(loadServerConfig({
-      BROWSER_RESEARCH_TOKEN: token,
-      BROWSER_RESEARCH_EXTENSION_ID: extensionId,
-      BROWSER_RESEARCH_PORT: "32191"
+      GROUNDTAB_TOKEN: token,
+      GROUNDTAB_EXTENSION_ID: extensionId,
+      GROUNDTAB_PORT: "32191"
     })).resolves.toEqual({ token, extensionId, port: 32191, brokerIdleMs: 600_000, ...defaultPolicy, source: "environment" });
   });
 
   it("creates private first-run configuration and persists the paired extension", async () => {
-    const directory = await mkdtemp(join(tmpdir(), "browser-research-first-run-"));
+    const directory = await mkdtemp(join(tmpdir(), "groundtab-first-run-"));
     const path = join(directory, "nested", "config.json");
-    const config = await loadServerConfig({ BROWSER_RESEARCH_CONFIG: path });
+    const config = await loadServerConfig({ GROUNDTAB_CONFIG: path });
     expect(config).toMatchObject({ extensionId: null, port: 32189, source: path });
     expect(config.token).toMatch(/^[0-9a-f]{64}$/);
     if (process.platform !== "win32") expect((await stat(path)).mode & 0o077).toBe(0);
@@ -65,10 +65,10 @@ describe("loadServerConfig", () => {
   });
 
   it("adds the generated credential to a preconfigured policy file", async () => {
-    const directory = await mkdtemp(join(tmpdir(), "browser-research-preconfigured-"));
+    const directory = await mkdtemp(join(tmpdir(), "groundtab-preconfigured-"));
     const path = join(directory, "config.json");
     await writeFile(path, JSON.stringify({ domainAllowlist: ["example.com"] }), { mode: 0o600 });
-    const config = await loadServerConfig({ BROWSER_RESEARCH_CONFIG: path });
+    const config = await loadServerConfig({ GROUNDTAB_CONFIG: path });
     expect(config.token).toMatch(/^[0-9a-f]{64}$/);
     expect(config.domainAllowlist).toEqual(["example.com"]);
     expect(JSON.parse(await readFile(path, "utf8"))).toMatchObject({ domainAllowlist: ["example.com"], token: config.token });
@@ -76,13 +76,13 @@ describe("loadServerConfig", () => {
 
   it("rejects the documented placeholder and arbitrary long strings", async () => {
     await expect(loadServerConfig({
-      BROWSER_RESEARCH_TOKEN: "replace-with-output-from-openssl-rand-hex-32",
-      BROWSER_RESEARCH_EXTENSION_ID: extensionId
+      GROUNDTAB_TOKEN: "replace-with-output-from-openssl-rand-hex-32",
+      GROUNDTAB_EXTENSION_ID: extensionId
     })).rejects.toThrow("64-character lowercase hexadecimal token");
   });
 
   it("loads policy and retention controls from config with environment overrides", async () => {
-    const directory = await mkdtemp(join(tmpdir(), "browser-research-policy-"));
+    const directory = await mkdtemp(join(tmpdir(), "groundtab-policy-"));
     const path = join(directory, "config.json");
     await writeFile(path, JSON.stringify({
       token,
@@ -102,9 +102,9 @@ describe("loadServerConfig", () => {
     await chmod(path, 0o600);
 
     await expect(loadServerConfig({
-      BROWSER_RESEARCH_CONFIG: path,
-      BROWSER_RESEARCH_MAX_PAGES_PER_SESSION: "5",
-      BROWSER_RESEARCH_DO_NOT_RETAIN: "true"
+      GROUNDTAB_CONFIG: path,
+      GROUNDTAB_MAX_PAGES_PER_SESSION: "5",
+      GROUNDTAB_DO_NOT_RETAIN: "true"
     })).resolves.toMatchObject({
       source: path,
       domainAllowlist: ["docs.example.com"],
@@ -123,10 +123,10 @@ describe("loadServerConfig", () => {
 
   it("accepts comma-separated domain policy from the environment", async () => {
     const config = await loadServerConfig({
-      BROWSER_RESEARCH_TOKEN: token,
-      BROWSER_RESEARCH_EXTENSION_ID: extensionId,
-      BROWSER_RESEARCH_DOMAIN_ALLOWLIST: "example.com, *.openai.com",
-      BROWSER_RESEARCH_DOMAIN_DENYLIST: "private.example.com"
+      GROUNDTAB_TOKEN: token,
+      GROUNDTAB_EXTENSION_ID: extensionId,
+      GROUNDTAB_DOMAIN_ALLOWLIST: "example.com, *.openai.com",
+      GROUNDTAB_DOMAIN_DENYLIST: "private.example.com"
     });
     expect(config.domainAllowlist).toEqual(["example.com", "openai.com"]);
     expect(config.domainDenylist).toEqual(["private.example.com"]);

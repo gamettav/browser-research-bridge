@@ -1,9 +1,9 @@
 import { randomBytes } from "node:crypto";
 import { chmod, readFile, writeFile } from "node:fs/promises";
 
-const debuggerPort = Number(process.env.BROWSER_RESEARCH_CDP_PORT ?? 9223);
-const bridgePort = Number(process.env.BROWSER_RESEARCH_PORT ?? 32189);
-const configPath = process.env.BROWSER_RESEARCH_E2E_CONFIG ?? "/private/tmp/vebicrolly-browser-research-config.json";
+const debuggerPort = Number(process.env.GROUNDTAB_CDP_PORT ?? 9223);
+const bridgePort = Number(process.env.GROUNDTAB_PORT ?? 32189);
+const configPath = process.env.GROUNDTAB_E2E_CONFIG ?? "/private/tmp/groundtab-e2e-config.json";
 const targets = await fetch(`http://127.0.0.1:${debuggerPort}/json/list`).then((response) => response.json());
 const optionsTarget = targets.find(
   (target) => target.type === "page" && /^chrome-extension:\/\/[^/]+\/options\.html$/.test(target.url)
@@ -38,7 +38,7 @@ function cdp(method, params = {}) {
   });
 }
 
-if (!Number.isInteger(bridgePort) || bridgePort < 1024 || bridgePort > 65535) throw new Error("BROWSER_RESEARCH_PORT is invalid");
+if (!Number.isInteger(bridgePort) || bridgePort < 1024 || bridgePort > 65535) throw new Error("GROUNDTAB_PORT is invalid");
 const configuration = { token, port: bridgePort };
 const evaluation = await cdp("Runtime.evaluate", {
   expression: `chrome.storage.local.set(${JSON.stringify(configuration)}).then(() => chrome.runtime.sendMessage({ type: "config_updated" })).then(() => true)`,

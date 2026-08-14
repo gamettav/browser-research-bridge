@@ -1,6 +1,6 @@
 # Browse command — canonical source
 
-`/browse` (Claude), `/br:browse` (Claude plugin), and `$browse` (Codex) are all the
+`/browse` (Claude), `/gt:browse` (Claude plugin), and `$browse` (Codex) are all the
 **same research command**, generated from one canonical definition so the harnesses can
 never drift apart. Generated artifacts are validated against the real harness loaders by
 `pnpm validate:skills`, which is part of `pnpm check`.
@@ -21,9 +21,9 @@ never drift apart. Generated artifacts are validated against the real harness lo
 | Path | Harness | Invoked as |
 | --- | --- | --- |
 | `integrations/claude/user-skills/browse/SKILL.md` | Claude Code (user skill) | `/browse`, plus implicit activation |
-| `integrations/claude/br/.claude-plugin/plugin.json` + `br/commands/browse.md` | Claude Code (plugin `br`) | `/br:browse` |
-| `integrations/codex/browser-research/skills/browse/SKILL.md` | Codex (plugin skill) | `$browse`, plus implicit activation |
-| `integrations/codex/browser-research/skills/browse/agents/openai.yaml` | Codex (skill UI metadata) | display name / short description / default prompt / MCP tool dependency |
+| `integrations/claude/gt/.claude-plugin/plugin.json` + `gt/commands/browse.md` | Claude Code (plugin `gt`) | `/gt:browse` |
+| `integrations/codex/groundtab/skills/browse/SKILL.md` | Codex (plugin skill) | `$browse`, plus implicit activation |
+| `integrations/codex/groundtab/skills/browse/agents/openai.yaml` | Codex (skill UI metadata) | display name / short description / default prompt / MCP tool dependency |
 
 The generator wipes each generated tree before writing, so renames and relocations never
 leave stale artifacts. Generation is idempotent. The retired `web-research` skill has been
@@ -38,15 +38,15 @@ pnpm install:skills                       # installs into $CLAUDE_CONFIG_DIR or 
 node scripts/install-skills.mjs --config-dir ~/.claude-personal   # explicit target
 ```
 
-**Claude portable plugin (`/br:browse`)** — add `integrations/claude/br` as a plugin. It is a
-thin command layer that relies on the `browser-research` MCP server already being configured.
+**Claude portable plugin (`/gt:browse`)** — add `integrations/claude/gt` as a plugin. It is a
+thin command layer that relies on the `groundtab` MCP server already being configured.
 
 **Codex (`$browse`)** — install the plugin from the bundled local marketplace:
 
 ```sh
 codex plugin marketplace add "$PWD/integrations/codex"
-codex plugin add browser-research@browser-research-local
-codex plugin list      # browser-research → installed, enabled
+codex plugin add groundtab@groundtab-local
+codex plugin list      # groundtab → installed, enabled
 ```
 
 ## Behavior (all harnesses)

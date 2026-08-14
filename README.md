@@ -54,19 +54,34 @@ That is the whole user setup. The agent plugin starts the local MCP broker itsel
 
 A successful extension-context fetch avoids creating a tab. Rendered navigation is reserved for pages that prove they need it.
 
+## Speed
+
+GroundTab runs the static extractor before it pays the cost of creating and settling a tab. On an Apple M4 with Brave 151, a local 11,874-byte article produced these results across 25 measured runs after five warmups:
+
+| Path | Median | p95 | Extracted text |
+| --- | ---: | ---: | ---: |
+| Static extension-context fetch | 6.0 ms | 18 ms | 11,216 chars |
+| Rendered inactive tab | 240 ms | 262 ms | 11,216 chars |
+
+The static path was 40.0× faster at the median. This benchmark removes network variance and runs the packaged GroundTab extractors on both paths. It measures browser fetch, extraction, tab creation, DOM settling, and cleanup, not arbitrary website load time.
+
+Run it on your machine with `pnpm benchmark:fetch`. The benchmark uses a local fixture, opens a temporary headless Chrome, Brave, or Chromium profile, and deletes that profile after the browser exits.
+
 ## How it fits together
 
-```mermaid
-flowchart LR
-    A[Codex or Claude Code] -->|MCP over stdio| B[Bundled local plugin]
-    B -->|mutual authentication| C[Broker on 127.0.0.1]
-    C -->|paired extension origin| D[GroundTab for Chrome]
-    D --> E{Can static HTML answer it?}
-    E -->|yes| F[Extract without a tab]
-    E -->|no| G[Render in an inactive tab]
-    F --> H[Bounded text + final URL]
-    G --> H
-    H --> A
+```text
+Codex / Claude Code
+        │  MCP over stdio
+        ▼
+GroundTab agent plugin
+        │  mutual authentication on 127.0.0.1
+        ▼
+GroundTab for Chrome
+        ├─ static HTML  → extract without a tab
+        └─ JS required → render in an inactive tab
+                           │
+                           ▼
+                  bounded text + final URL
 ```
 
 The first MCP launch creates a private 256-bit credential. Pairing uses a separate 64-bit code that expires after ten minutes and locks after five incorrect attempts. The extension sends a proof derived from the code, not the code itself. Once paired, the broker accepts only that exact Chrome extension origin.
@@ -119,8 +134,8 @@ The extension needs HTTP(S) site access to research without asking for an `activ
 The repository produces three packages:
 
 - Chrome Web Store extension: `apps/chrome-extension/dist`
-- Codex plugin: `integrations/codex/browser-research`
-- Claude Code plugin: `integrations/claude/browser-research`
+- Codex plugin: `integrations/codex/groundtab`
+- Claude Code plugin: `integrations/claude/groundtab`
 
 The current Chrome upload archive is generated with `pnpm package:extension`. Publisher steps, permission copy, and the clean-machine release gate live in [DISTRIBUTION.md](DISTRIBUTION.md).
 
@@ -140,6 +155,7 @@ Useful commands:
 ```sh
 pnpm build                 # build the site, extension, MCP server, and plugins
 pnpm package:extension     # create the Chrome Web Store zip
+pnpm benchmark:fetch       # compare static fetch with rendered-tab fallback
 pnpm evaluate:research-quality
 ```
 

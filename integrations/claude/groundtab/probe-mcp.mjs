@@ -1,10 +1,10 @@
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
 
-const serverPath = process.env.BROWSER_RESEARCH_SERVER_PATH;
-if (!serverPath) throw new Error("BROWSER_RESEARCH_SERVER_PATH is required");
+const serverPath = process.env.GROUNDTAB_SERVER_PATH;
+if (!serverPath) throw new Error("GROUNDTAB_SERVER_PATH is required");
 const child = spawn(process.execPath, [serverPath], {
-  env: { ...process.env, BROWSER_RESEARCH_BROKER_IDLE_MS: "1000" },
+  env: { ...process.env, GROUNDTAB_BROKER_IDLE_MS: "1000" },
   stdio: ["pipe", "pipe", "pipe"]
 });
 let stderr = "";
@@ -25,7 +25,7 @@ try {
   const initialized = await request(1, "initialize", {
     protocolVersion: "2025-03-26",
     capabilities: {},
-    clientInfo: { name: "browser-research-doctor", version: "0.4.1" }
+    clientInfo: { name: "groundtab-doctor", version: "0.4.2" }
   });
   if (!initialized?.serverInfo?.name) throw new Error("MCP initialize returned no server information");
   send({ jsonrpc: "2.0", method: "notifications/initialized", params: {} });
@@ -38,11 +38,11 @@ try {
   const statusText = statusResult?.content?.find?.((item) => item?.type === "text")?.text;
   if (typeof statusText !== "string") throw new Error("bridge_status returned no text content");
   const status = JSON.parse(statusText);
-  const expectedBuildId = "browser-research-0.4.1-pairing-v3";
+  const expectedBuildId = "groundtab-0.4.2-pairing-v3";
   if (status.brokerBuildId !== expectedBuildId) {
     throw new Error(`Broker runtime is stale: expected ${expectedBuildId}, got ${status.brokerBuildId ?? "unknown"}`);
   }
-  if (process.env.BROWSER_RESEARCH_REQUIRE_EXTENSION === "1" && status.connected !== true) {
+  if (process.env.GROUNDTAB_REQUIRE_EXTENSION === "1" && status.connected !== true) {
     throw new Error("GroundTab extension is not connected");
   }
   process.stdout.write(`${JSON.stringify({ ok: true, extensionConnected: status.connected === true, brokerBuildId: status.brokerBuildId })}\n`);

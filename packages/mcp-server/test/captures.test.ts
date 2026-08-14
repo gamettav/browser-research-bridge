@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { PageExtraction } from "@browser-research/protocol";
+import type { PageExtraction } from "@groundtab/protocol";
 import { AuditLog, CaptureStore, ResearchRunGuard, redactUrlParameters, splitBlocks } from "../src/captures.js";
 
 describe("splitBlocks", () => {

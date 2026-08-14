@@ -6,8 +6,8 @@ const serverBuild = resolve(root, "packages/mcp-server/dist/index.cjs");
 const brokerBuild = resolve(root, "packages/mcp-server/dist/broker.cjs");
 const mcpProbe = resolve(root, "scripts/probe-mcp.mjs");
 const destinations = [
-  resolve(root, "integrations/codex/browser-research/server"),
-  resolve(root, "integrations/claude/browser-research/server")
+  resolve(root, "integrations/codex/groundtab/server"),
+  resolve(root, "integrations/claude/groundtab/server")
 ];
 
 for (const destination of destinations) {
@@ -15,7 +15,7 @@ for (const destination of destinations) {
   await rm(destination, { recursive: true, force: true });
   await rm(resolve(pluginRoot, "extension"), { recursive: true, force: true });
   await rm(resolve(pluginRoot, "install-native-host.mjs"), { force: true });
-  await rm(resolve(pluginRoot, "browser-research.mjs"), { force: true });
+  await rm(resolve(pluginRoot, "groundtab.mjs"), { force: true });
   await mkdir(destination, { recursive: true });
   await cp(serverBuild, resolve(destination, "index.cjs"));
   await cp(brokerBuild, resolve(destination, "broker.cjs"));

@@ -1,4 +1,4 @@
-import { isAllowedPublicWebUrl, isPublicIpAddress } from "@browser-research/protocol";
+import { isAllowedPublicWebUrl, isPublicIpAddress } from "@groundtab/protocol";
 
 export type DnsResolve = (hostname: string) => Promise<{ resultCode: number; address?: string }>;
 export type NavigationPolicyMode = "literal" | "broker-only" | "browser-dns";

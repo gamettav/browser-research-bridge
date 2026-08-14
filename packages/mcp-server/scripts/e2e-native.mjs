@@ -12,17 +12,17 @@ import {
   constantTimeHexEqual,
   hmacSha256Hex,
   serverProofPayload
-} from "@browser-research/protocol";
+} from "@groundtab/protocol";
 
 const extensionId = "abcdefghijklmnopabcdefghijklmnop";
 const token = "a".repeat(64);
 const port = 63000 + Math.floor(Math.random() * 1_000);
-const temporary = await mkdtemp(join(tmpdir(), "browser-research-native-e2e-"));
+const temporary = await mkdtemp(join(tmpdir(), "groundtab-native-e2e-"));
 const configPath = join(temporary, "config.json");
 await writeFile(configPath, `${JSON.stringify({ token, extensionId, port, brokerIdleMs: 1_000 })}\n`, { mode: 0o600 });
 await chmod("dist/native-host.cjs", 0o755);
 
-const environment = { ...process.env, BROWSER_RESEARCH_CONFIG: configPath };
+const environment = { ...process.env, GROUNDTAB_CONFIG: configPath };
 const native = spawn("dist/native-host.cjs", [`chrome-extension://${extensionId}/`], {
   env: environment,
   stdio: ["pipe", "pipe", "pipe"]
@@ -35,6 +35,13 @@ const bootstrap = await nextWithTimeout(nativeMessages, 10_000);
 if (bootstrap.type !== "native_bootstrap_config" || bootstrap.extensionId !== extensionId || bootstrap.token !== token || bootstrap.port !== port) {
   throw new Error(`Native relay did not provide the expected bootstrap config: ${JSON.stringify(bootstrap)} ${nativeError}`);
 }
+writeNative(native.stdin, {
+  type: "extension_hello",
+  extensionId,
+  hasToken: true,
+  clientVersion: "0.4.2",
+  clientBuildId: BRIDGE_BUILD_ID
+});
 const challenge = await nextWithTimeout(nativeMessages, 10_000);
 if (challenge.type !== "auth_challenge" || challenge.channel !== "extension") {
   throw new Error(`Native relay did not receive broker challenge: ${JSON.stringify(challenge)} ${nativeError}`);
@@ -49,7 +56,7 @@ writeNative(native.stdin, {
   nonce: challenge.nonce,
   protocolVersion: PROTOCOL_VERSION,
   clientId: extensionId,
-  clientVersion: "0.4.1",
+  clientVersion: "0.4.2",
   clientBuildId: BRIDGE_BUILD_ID,
   proof: await hmacSha256Hex(token, clientProofPayload("extension", challenge.nonce, PROTOCOL_VERSION, extensionId, BRIDGE_BUILD_ID))
 });
@@ -64,7 +71,7 @@ const transport = new StdioClientTransport({
   stderr: "pipe"
 });
 transport.stderr?.on("data", () => undefined);
-const client = new Client({ name: "native-host-e2e", version: "0.4.1" });
+const client = new Client({ name: "native-host-e2e", version: "0.4.2" });
 
 try {
   await client.connect(transport);

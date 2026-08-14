@@ -20,7 +20,7 @@ importers:
 
   apps/chrome-extension:
     dependencies:
-      '@browser-research/protocol':
+      '@groundtab/protocol':
         specifier: workspace:*
         version: link:../../packages/protocol
       '@mozilla/readability':
@@ -70,7 +70,7 @@ importers:
 
   packages/mcp-server:
     dependencies:
-      '@browser-research/protocol':
+      '@groundtab/protocol':
         specifier: workspace:*
         version: link:../protocol
       '@modelcontextprotocol/sdk':

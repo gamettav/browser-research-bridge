@@ -23,7 +23,7 @@ import {
   type BrowserJob,
   type JobResultMessage,
   type ProgressEvent
-} from "@browser-research/protocol";
+} from "@groundtab/protocol";
 import { assertPublicResolvedUrl } from "./dns-policy.js";
 
 type PendingJob = {
@@ -446,7 +446,7 @@ export class BrowserBridge {
 }
 
 function abortError(): Error {
-  const error = new Error("Browser research request was cancelled");
+  const error = new Error("GroundTab request was cancelled");
   error.name = "AbortError";
   return error;
 }

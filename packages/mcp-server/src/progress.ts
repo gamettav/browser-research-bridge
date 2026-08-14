@@ -6,7 +6,7 @@ import {
   type ProgressEvent,
   type ResearchErrorCode,
   type ResearchPhase
-} from "@browser-research/protocol";
+} from "@groundtab/protocol";
 
 export const PROGRESS_DEBOUNCE_MS = 700;
 

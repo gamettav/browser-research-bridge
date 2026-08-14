@@ -1,9 +1,9 @@
 {
   "mcpServers": {
-    "browser-research": {
+    "groundtab": {
       "type": "stdio",
       "command": "node",
-      "args": ["${PLUGIN_ROOT}/server/index.cjs"]
+      "args": ["${CLAUDE_PLUGIN_ROOT}/server/index.cjs"]
     }
   }
 }

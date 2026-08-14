@@ -5,7 +5,8 @@ await rm("dist", { recursive: true, force: true });
 await build({
   entryPoints: {
     index: "src/index.ts",
-    broker: "src/broker.ts"
+    broker: "src/broker.ts",
+    "native-host": "src/native-host.ts"
   },
   bundle: true,
   platform: "node",

@@ -43,4 +43,4 @@ Removing the extension clears its Chrome-managed local storage. Removing the age
 
 ## Contact
 
-For privacy questions, open a support issue at <https://github.com/gamettav/browser-research-bridge/issues>. Do not report security vulnerabilities in a public issue; follow [SECURITY.md](SECURITY.md).
+For privacy questions, open a support issue at <https://github.com/gamettav/groundtab/issues>. Do not report security vulnerabilities in a public issue; follow [SECURITY.md](SECURITY.md).

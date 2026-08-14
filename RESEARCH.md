@@ -1,6 +1,6 @@
 # Browser-assisted research bridge for Codex and Claude
 
-Status: feasible. After one-time installation and permission setup, research can run without user interaction. The recommended product is an autonomous browser research bridge, not a crawler-evasion system.
+Status: feasible. After one-time installation and permission setup, research can run without user interaction. GroundTab is an autonomous, read-only Chrome bridge, not a crawler-evasion system.
 
 ## Outcome
 
@@ -244,4 +244,4 @@ It does not remove the need for this project when Codex support, a harness-neutr
 
 ## Recommendation
 
-Proceed with Phase 0 as an **autonomous browser research bridge**, not as a crawler bypass. The technical foundation is strong and portable across Codex and Claude because MCP is the shared boundary. The one-time permission grant enables zero-interaction searches; a dedicated Chrome profile, read-only tools, citation quality, and prompt-injection resistance keep that autonomy contained.
+Proceed with Phase 0 as **GroundTab**, not as a crawler bypass. The technical foundation is strong and portable across Codex and Claude because MCP is the shared boundary. The one-time permission grant enables zero-interaction searches; a dedicated Chrome profile, read-only tools, citation quality, and prompt-injection resistance keep that autonomy contained.

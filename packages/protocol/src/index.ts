@@ -2,8 +2,8 @@ import { z } from "zod";
 
 export const DEFAULT_PORT = 32189;
 export const PROTOCOL_VERSION = 3;
-export const BRIDGE_VERSION = "0.4.1";
-export const BRIDGE_BUILD_ID = "browser-research-0.4.1-pairing-v3";
+export const BRIDGE_VERSION = "0.4.2";
+export const BRIDGE_BUILD_ID = "groundtab-0.4.2-pairing-v3";
 export const TOKEN_PATTERN = /^[0-9a-f]{64}$/;
 export const PROOF_PATTERN = /^[0-9a-f]{64}$/;
 export const NONCE_PATTERN = /^[0-9a-f]{64}$/;
@@ -303,7 +303,7 @@ export function serverProofPayload(
   protocolVersion: number,
   serverBuildId: string
 ): string {
-  return `browser-research|server|${channel}|${nonce}|${protocolVersion}|${serverBuildId}`;
+  return `groundtab|server|${channel}|${nonce}|${protocolVersion}|${serverBuildId}`;
 }
 
 export function clientProofPayload(
@@ -313,15 +313,15 @@ export function clientProofPayload(
   clientId: string,
   clientBuildId: string
 ): string {
-  return `browser-research|client|${channel}|${nonce}|${protocolVersion}|${clientId}|${clientBuildId}`;
+  return `groundtab|client|${channel}|${nonce}|${protocolVersion}|${clientId}|${clientBuildId}`;
 }
 
 export function pairingSubmitPayload(nonce: string, extensionId: string, protocolVersion: number): string {
-  return `browser-research|pairing-submit|${nonce}|${protocolVersion}|${extensionId}`;
+  return `groundtab|pairing-submit|${nonce}|${protocolVersion}|${extensionId}`;
 }
 
 export function pairingOkPayload(nonce: string, token: string, port: number, extensionId: string, protocolVersion: number): string {
-  return `browser-research|pairing-ok|${nonce}|${protocolVersion}|${extensionId}|${port}|${token}`;
+  return `groundtab|pairing-ok|${nonce}|${protocolVersion}|${extensionId}|${port}|${token}`;
 }
 
 export async function hmacSha256Hex(token: string, payload: string): Promise<string> {

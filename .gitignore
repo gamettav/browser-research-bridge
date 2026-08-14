@@ -7,5 +7,5 @@ artifacts/
 .worktrees/
 *.log
 /config.json
-integrations/codex/browser-research/server/
-integrations/claude/browser-research/server/
+integrations/codex/groundtab/server/
+integrations/claude/groundtab/server/

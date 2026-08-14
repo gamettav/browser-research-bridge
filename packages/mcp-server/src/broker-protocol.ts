@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { BRIDGE_BUILD_ID, BRIDGE_VERSION, BrowserJobSchema, JobResultMessageSchema, ProgressEventSchema } from "@browser-research/protocol";
+import { BRIDGE_BUILD_ID, BRIDGE_VERSION, BrowserJobSchema, JobResultMessageSchema, ProgressEventSchema } from "@groundtab/protocol";
 
 export const BROKER_VERSION = BRIDGE_VERSION;
 export const BROKER_BUILD_ID = BRIDGE_BUILD_ID;

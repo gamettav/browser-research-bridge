@@ -33,10 +33,10 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @browser-research/site build
+      - run: pnpm --filter @groundtab/site build
         env:
-          NEXT_PUBLIC_BASE_PATH: /browser-research-bridge
-          NEXT_PUBLIC_REPOSITORY_URL: https://github.com/gamettav/browser-research-bridge
+          NEXT_PUBLIC_BASE_PATH: /groundtab
+          NEXT_PUBLIC_REPOSITORY_URL: https://github.com/gamettav/groundtab
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -1,10 +1,13 @@
 {
-  "name": "browser-research",
-  "version": "0.4.1",
+  "name": "groundtab",
+  "version": "0.4.2",
   "description": "Research web pages through the GroundTab Chrome extension.",
   "author": {
     "name": "GroundTab"
   },
+  "homepage": "https://gamettav.github.io/groundtab/",
+  "repository": "https://github.com/gamettav/groundtab",
+  "license": "Apache-2.0",
   "skills": "./skills/",
   "interface": {
     "displayName": "GroundTab",
@@ -13,6 +16,9 @@
     "developerName": "GroundTab",
     "category": "Productivity",
     "capabilities": ["Read"],
+    "websiteURL": "https://gamettav.github.io/groundtab/",
+    "privacyPolicyURL": "https://gamettav.github.io/groundtab/privacy/",
+    "brandColor": "#185743",
     "defaultPrompt": [
       "Research this topic with GroundTab and cite the final source URLs."
     ]

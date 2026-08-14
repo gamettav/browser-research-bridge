@@ -57,28 +57,28 @@ async function main() {
       if (fm.name !== "browse") fail("claude user skill: name must be 'browse'");
       if (typeof fm.description !== "string" || !fm.description) fail("claude user skill: missing description");
       if (typeof fm["argument-hint"] !== "string") fail("claude user skill: argument-hint did not survive YAML parse (must be quoted)");
-      if (typeof fm["allowed-tools"] !== "string" || !fm["allowed-tools"].includes("mcp__browser-research__")) {
+      if (typeof fm["allowed-tools"] !== "string" || !fm["allowed-tools"].includes("mcp__groundtab__")) {
         fail("claude user skill: allowed-tools missing or lost the MCP tool grants");
       }
     }
   }
 
   // 3. Claude plugin command frontmatter + manifest.
-  const command = committed.get("integrations/claude/br/commands/browse.md");
+  const command = committed.get("integrations/claude/gt/commands/browse.md");
   if (command) {
     const fm = frontmatter(command, "claude plugin command");
     if (fm) {
       if (typeof fm["argument-hint"] !== "string") fail("claude plugin command: argument-hint did not survive YAML parse (must be quoted)");
-      if (typeof fm["allowed-tools"] !== "string" || !fm["allowed-tools"].includes("mcp__browser-research__")) {
+      if (typeof fm["allowed-tools"] !== "string" || !fm["allowed-tools"].includes("mcp__groundtab__")) {
         fail("claude plugin command: allowed-tools missing or lost the MCP tool grants");
       }
     }
   }
-  const manifestRaw = committed.get("integrations/claude/br/.claude-plugin/plugin.json");
+  const manifestRaw = committed.get("integrations/claude/gt/.claude-plugin/plugin.json");
   if (manifestRaw) {
     try {
       const manifest = JSON.parse(manifestRaw);
-      if (manifest.name !== "br") fail("claude plugin manifest: name must be 'br' so the command is /br:browse");
+      if (manifest.name !== "gt") fail("claude plugin manifest: name must be 'gt' so the command is /gt:browse");
       if ("_generated" in manifest) fail("claude plugin manifest: unsupported '_generated' key must be removed");
     } catch (error) {
       fail(`claude plugin manifest: invalid JSON — ${error instanceof Error ? error.message : String(error)}`);
@@ -86,14 +86,14 @@ async function main() {
   }
 
   // 4. Codex skill frontmatter.
-  const codexSkill = committed.get("integrations/codex/browser-research/skills/browse/SKILL.md");
+  const codexSkill = committed.get("integrations/codex/groundtab/skills/browse/SKILL.md");
   if (codexSkill) {
     const fm = frontmatter(codexSkill, "codex skill");
     if (fm && fm.name !== "browse") fail("codex skill: name must be 'browse'");
   }
 
   // 5. Codex UI metadata: supported schema at the supported (skill-scoped) location.
-  const openaiPath = "integrations/codex/browser-research/skills/browse/agents/openai.yaml";
+  const openaiPath = "integrations/codex/groundtab/skills/browse/agents/openai.yaml";
   const openaiRaw = committed.get(openaiPath);
   if (openaiRaw) {
     let doc;
@@ -105,8 +105,8 @@ async function main() {
       if (!doc.interface?.short_description) fail("codex openai.yaml: interface.short_description missing");
       if (!doc.interface?.default_prompt) fail("codex openai.yaml: interface.default_prompt missing");
       const tool = doc.dependencies?.tools?.[0];
-      if (!tool || tool.type !== "mcp" || tool.value !== "browser-research") {
-        fail("codex openai.yaml: dependencies.tools must declare the browser-research MCP dependency");
+      if (!tool || tool.type !== "mcp" || tool.value !== "groundtab") {
+        fail("codex openai.yaml: dependencies.tools must declare the groundtab MCP dependency");
       }
       if (doc.policy?.allow_implicit_invocation !== true) fail("codex openai.yaml: policy.allow_implicit_invocation must be true");
       for (const unsupported of ["name", "description", "activation", "tools"]) {
@@ -117,9 +117,9 @@ async function main() {
 
   // 6. Stale artifacts must be gone.
   const stale = [
-    "integrations/codex/browser-research/agents/openai.yaml",
-    "integrations/claude/browser-research/skills/web-research",
-    "integrations/codex/browser-research/skills/web-research"
+    "integrations/codex/groundtab/agents/openai.yaml",
+    "integrations/claude/groundtab/skills/web-research",
+    "integrations/codex/groundtab/skills/web-research"
   ];
   for (const path of stale) {
     if (await exists(path)) fail(`stale artifact still present (should be removed): ${path}`);

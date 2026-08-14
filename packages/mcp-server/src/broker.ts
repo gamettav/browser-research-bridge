@@ -8,7 +8,7 @@ import {
   constantTimeHexEqual,
   hmacSha256Hex,
   serverProofPayload
-} from "@browser-research/protocol";
+} from "@groundtab/protocol";
 import { BROKER_BUILD_ID, BROKER_VERSION, BrokerCancelSchema, BrokerRequestSchema } from "./broker-protocol.js";
 import { loadServerConfig, persistPairedExtension } from "./config.js";
 import { assertPublicResolvedUrl } from "./dns-policy.js";

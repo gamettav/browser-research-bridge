@@ -1,10 +1,10 @@
 {
-  "name": "@browser-research/mcp-server",
-  "version": "0.4.1",
+  "name": "@groundtab/mcp-server",
+  "version": "0.4.2",
   "private": true,
   "type": "module",
   "bin": {
-    "browser-research-mcp": "dist/index.cjs"
+    "groundtab-mcp": "dist/index.cjs"
   },
   "scripts": {
     "build": "node scripts/build.mjs",
@@ -17,7 +17,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@browser-research/protocol": "workspace:*",
+    "@groundtab/protocol": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.17.2",
     "ws": "^8.18.3",
     "zod": "^3.25.0"

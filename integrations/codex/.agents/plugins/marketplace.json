@@ -1,14 +1,14 @@
 {
-  "name": "browser-research-local",
+  "name": "groundtab-local",
   "interface": {
     "displayName": "GroundTab (local)"
   },
   "plugins": [
     {
-      "name": "browser-research",
+      "name": "groundtab",
       "source": {
         "source": "local",
-        "path": "./browser-research"
+        "path": "./groundtab"
       },
       "policy": {
         "installation": "AVAILABLE",

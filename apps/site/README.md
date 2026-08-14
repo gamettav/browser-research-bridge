@@ -1,4 +1,4 @@
-# @browser-research/site
+# @groundtab/site
 
 The landing site for GroundTab — a Next.js (App Router) app that
 builds to a fully static export, so it deploys to GitHub Pages with no server.
@@ -6,9 +6,9 @@ builds to a fully static export, so it deploys to GitHub Pages with no server.
 ## Commands
 
 ```sh
-pnpm --filter @browser-research/site dev        # local dev at http://localhost:3000
-pnpm --filter @browser-research/site build      # static export → apps/site/out/
-pnpm --filter @browser-research/site typecheck
+pnpm --filter @groundtab/site dev        # local dev at http://localhost:3000
+pnpm --filter @groundtab/site build      # static export → apps/site/out/
+pnpm --filter @groundtab/site typecheck
 ```
 
 `pnpm build` at the repo root also builds this app as part of `pnpm -r build`.
@@ -30,14 +30,14 @@ publish `apps/site/out/`.
 For a **project page** served under `/<repo>`, set the base path at build time:
 
 ```sh
-NEXT_PUBLIC_BASE_PATH=/browser-research-bridge pnpm --filter @browser-research/site build
+NEXT_PUBLIC_BASE_PATH=/groundtab pnpm --filter @groundtab/site build
 ```
 
 For a user/organization page or a custom domain served at the root, build without it.
 
 ## Before going public
 
-- Replace the placeholder repo URL (`github.com/gamettav/browser-research-bridge`)
+- Replace the placeholder repo URL (`github.com/gamettav/groundtab`)
   in `app/page.tsx` (`REPO` constant) with the real repository.
-- Keep the product name "GroundTab" in anything user-facing —
-  never the `vebicrolly` working-folder name.
+- Keep the product name "GroundTab" in anything user-facing, regardless of the
+  local checkout folder name.

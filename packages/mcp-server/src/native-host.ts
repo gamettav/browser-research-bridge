@@ -62,7 +62,7 @@ async function connectOrStartBroker(config: Awaited<ReturnType<typeof loadServer
       extensionId: config.extensionId,
       port: config.port,
       brokerIdleMs: config.brokerIdleMs,
-      brokerPath: process.env.BROWSER_RESEARCH_BROKER_PATH ?? resolve(__dirname, "broker.cjs")
+      brokerPath: process.env.GROUNDTAB_BROKER_PATH ?? resolve(__dirname, "broker.cjs")
     });
     await starter.close();
   }

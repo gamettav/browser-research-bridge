@@ -10,7 +10,7 @@ export const NAME = "browse";
 
 // Read-only MCP tools this command is allowed to use, pre-approved so ordinary
 // research runs without permission prompts.
-export const MCP_SERVER = "browser-research";
+export const MCP_SERVER = "groundtab";
 export const TOOLS = [
   "bridge_status",
   "search_web",

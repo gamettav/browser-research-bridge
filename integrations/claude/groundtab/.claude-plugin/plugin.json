@@ -1,7 +1,7 @@
 {
-  "name": "browser-research",
+  "name": "groundtab",
   "displayName": "GroundTab",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Research web pages through the paired GroundTab Chrome extension.",
   "author": {
     "name": "GroundTab"

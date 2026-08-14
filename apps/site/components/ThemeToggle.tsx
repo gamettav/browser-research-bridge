@@ -21,7 +21,7 @@ export function ThemeToggle() {
     const next: Theme = resolvedTheme() === "dark" ? "light" : "dark";
     document.documentElement.setAttribute("data-theme", next);
     try {
-      localStorage.setItem("brb-theme", next);
+      localStorage.setItem("groundtab-theme", next);
     } catch {
       /* storage may be unavailable; the in-page toggle still works */
     }

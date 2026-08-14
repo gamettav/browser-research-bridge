@@ -10,9 +10,9 @@ Use this sheet when creating the unlisted MVP item in the Chrome Web Store Devel
 - Category: `Workflow & Planning`
 - Visibility: `Unlisted`
 - Regions: `All regions`
-- Website: `https://gamettav.github.io/browser-research-bridge/`
-- Support URL: `https://github.com/gamettav/browser-research-bridge/issues`
-- Privacy policy: `https://gamettav.github.io/browser-research-bridge/privacy/`
+- Website: `https://gamettav.github.io/groundtab/`
+- Support URL: `https://github.com/gamettav/groundtab/issues`
+- Privacy policy: `https://gamettav.github.io/groundtab/privacy/`
 - Store icon: `apps/chrome-extension/static/icon-128.png`
 - Screenshot: `apps/chrome-extension/store/groundtab-pairing-1280x800.png`
 - Small promo tile: `apps/chrome-extension/store/groundtab-promo-440x280.png`
@@ -32,7 +32,7 @@ The extension requests HTTP(S) site access so it can read a user-requested URL w
 The default local policy denies banking, healthcare, administration, email, password-manager, localhost, private-network, and cloud-metadata destinations. DNS and redirect checks fail closed before extraction.
 
 Learn more and read the source:
-https://github.com/gamettav/browser-research-bridge
+https://github.com/gamettav/groundtab
 
 ## Privacy practices
 
@@ -83,7 +83,7 @@ The data is used only for the extension's user-facing research feature. It is pr
 
 No website account or paid feature is required. The extension is a companion to the GroundTab Codex or Claude Code plugin and initially opens its pairing page. The full source, protocol, tests, and packaged agent plugins are available at:
 
-`https://github.com/gamettav/browser-research-bridge`
+`https://github.com/gamettav/groundtab`
 
 Expected first-run behavior:
 

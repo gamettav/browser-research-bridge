@@ -7,7 +7,7 @@ import {
   clientProofPayload,
   hmacSha256Hex,
   serverProofPayload
-} from "@browser-research/protocol";
+} from "@groundtab/protocol";
 import { BrokerClient, brokerEnvironment } from "../src/broker-client.js";
 
 const token = "a".repeat(64);
@@ -162,15 +162,15 @@ describe("BrokerClient", () => {
       PATH: "/bin",
       LANG: "en_US.UTF-8",
       SECRET_FROM_HARNESS: "must-not-leak",
-      BROWSER_RESEARCH_CONFIG: "/private/session/config.json"
+      GROUNDTAB_CONFIG: "/private/session/config.json"
     });
     expect(environment).toMatchObject({
       PATH: "/bin",
       LANG: "en_US.UTF-8",
-      BROWSER_RESEARCH_PORT: "32189"
+      GROUNDTAB_PORT: "32189"
     });
     expect(environment.SECRET_FROM_HARNESS).toBeUndefined();
-    expect(environment.BROWSER_RESEARCH_CONFIG).toBeUndefined();
+    expect(environment.GROUNDTAB_CONFIG).toBeUndefined();
   });
 
   it("refuses a port squatter that cannot prove possession of the token", async () => {
@@ -182,7 +182,7 @@ describe("BrokerClient", () => {
         channel: "broker-client",
         nonce: "c".repeat(64),
         protocolVersion: PROTOCOL_VERSION,
-        serverVersion: "0.4.1",
+        serverVersion: "0.4.2",
         serverBuildId: BRIDGE_BUILD_ID,
         proof: "0".repeat(64)
       }));
@@ -209,7 +209,7 @@ function respondAsBroker(
 ): void {
   const nonce = "b".repeat(64);
   const protocolVersion = overrides.protocolVersion ?? PROTOCOL_VERSION;
-  const serverVersion = overrides.serverVersion ?? "0.4.1";
+  const serverVersion = overrides.serverVersion ?? "0.4.2";
   void hmacSha256Hex(token, serverProofPayload("broker-client", nonce, protocolVersion, BRIDGE_BUILD_ID)).then((proof) => {
     socket.send(JSON.stringify({
       type: "auth_challenge",
