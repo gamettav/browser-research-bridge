@@ -67,6 +67,12 @@ The static path was 40.0× faster at the median. This benchmark removes network 
 
 Run it on your machine with `pnpm benchmark:fetch`. The benchmark uses a local fixture, opens a temporary headless Chrome, Brave, or Chromium profile, and deletes that profile after the browser exits.
 
+## Token use
+
+GroundTab sends bounded readable Markdown to the agent, not screenshots, raw HTML, or browser state. Static fetch and rendered-tab fallback produced the same 11,216-character extraction in the benchmark above, so falling back to Chrome rendering did not add model-token cost. That fixture is roughly 2,800 English-language tokens before source metadata; the exact count depends on the model tokenizer.
+
+For the same returned text, GroundTab uses effectively the same model tokens as a regular text crawler. Chrome work happens outside the model context; tokens are spent only on the extracted text and citation metadata returned to the agent.
+
 ## How it fits together
 
 ```text
