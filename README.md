@@ -37,9 +37,6 @@ The public install flow has three steps:
 
 That is the whole user setup. The agent plugin starts the local MCP broker itself. Users do not clone this repository, install Native Messaging, download a second Chrome, enable Developer Mode, copy an extension ID, or paste a permanent token.
 
-> [!IMPORTANT]
-> GroundTab for Chrome is live. The Codex and Claude listings are not live yet; their install buttons will become active as each marketplace listing is approved.
-
 ## Where it helps
 
 | The page | What GroundTab does |
