@@ -55,6 +55,8 @@ claude plugin install groundtab@groundtab
 
 Restart the agent after installation. Ask it to **“set up GroundTab”**, open the GroundTab extension in the browser you want to use, and enter the displayed one-time code. The same pairing then survives new agent sessions and browser restarts.
 
+Claude Code may show its normal one-time permission prompt for GroundTab's read-only MCP tools; approve it to continue. Noninteractive `claude -p` runs must explicitly include those tools in `--allowedTools`, because Claude does not inherit interactive approvals in print mode.
+
 Chrome or Brave must be running while GroundTab researches; the agent plugin starts the local broker automatically, but it cannot run a browser extension while the browser itself is closed. On a cold agent start, GroundTab waits briefly for a paired browser to wake and reconnect before reporting it unavailable.
 
 The GitHub marketplace is available now. Official Codex and Claude marketplace listings are still pending; when approved, they will reduce the agent side to one marketplace click.
