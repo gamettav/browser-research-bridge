@@ -7,8 +7,8 @@ description: "Research the web to answer a question, look something up, verify a
 
 # Browse — web research
 
-Answer the user's question by researching the public web through the local Browser
-GroundTab bridge. Invoke explicitly as `$browse <question>`, or activate automatically
+Answer the user's question by researching the public web through the local GroundTab
+bridge. Invoke explicitly as `$browse <question>`, or activate automatically
 when the user asks to research something, look something up, find sources, check the
 latest on a topic, verify a claim online, or read/summarize one or more URLs.
 

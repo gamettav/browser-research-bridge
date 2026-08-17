@@ -50,8 +50,8 @@ export const TOKENS = {
 // The shared workflow body. `{{INVOKE}}` is replaced per harness.
 export const BODY = `# Browse — web research
 
-Answer the user's question by researching the public web through the local Browser
-GroundTab bridge. Invoke explicitly as \`{{INVOKE}} <question>\`, or activate automatically
+Answer the user's question by researching the public web through the local GroundTab
+bridge. Invoke explicitly as \`{{INVOKE}} <question>\`, or activate automatically
 when the user asks to research something, look something up, find sources, check the
 latest on a topic, verify a claim online, or read/summarize one or more URLs.
 
