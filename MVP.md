@@ -1,6 +1,6 @@
 # MVP acceptance ledger
 
-Last updated: 2026-08-14
+Last updated: 2026-08-17
 
 ## Product installation contract
 
@@ -24,11 +24,11 @@ Last updated: 2026-08-14
 - The bundled research workflow provides DuckDuckGo → Bing → Google failover, transient retry, replacement sources, domain quarantine, canonical/syndication deduplication, source ranking, independent-evidence checks, claim coverage, prompt-injection handling, early stopping, and exact `Research incomplete` behavior.
 - Research-quality fixtures cover factual, technical, news, comparison, insufficient-evidence, recovery, and malicious-page scenarios.
 
-## Not yet publicly usable
+## Current distribution status
 
 These are external distribution gates, not user setup steps:
 
-- Chrome Web Store upload, review, and approved public URL.
+- Chrome Web Store: published publicly as version `0.4.2` at https://chromewebstore.google.com/detail/groundtab/hofdkaefhagmobgomodpekofmghdkpjc.
 - Codex plugin-directory submission, review, and approved install URL.
 - Claude Code marketplace submission, review, and approved install URL.
 - Clean-machine acceptance from all three signed/reviewed packages.

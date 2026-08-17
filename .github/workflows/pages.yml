@@ -37,6 +37,7 @@ jobs:
         env:
           NEXT_PUBLIC_BASE_PATH: /groundtab
           NEXT_PUBLIC_REPOSITORY_URL: https://github.com/gamettav/groundtab
+          NEXT_PUBLIC_CHROME_WEB_STORE_URL: https://chromewebstore.google.com/detail/groundtab/hofdkaefhagmobgomodpekofmghdkpjc
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

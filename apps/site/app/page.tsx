@@ -227,7 +227,7 @@ export default function Home() {
             </div>
 
             <div className="callout">
-              <b>RELEASE STATUS</b> — The install flow is implemented. Store and marketplace buttons become live after publisher review; until then they are deliberately marked as pending rather than sending users to source-code setup.
+              <b>RELEASE STATUS</b> — GroundTab for Chrome is live. Codex and Claude Code install buttons will become active after their marketplace reviews; until then they remain pending instead of sending users to source-code setup.
             </div>
           </div>
         </section>

@@ -10,12 +10,12 @@ No public instructions may direct users to clone the repository, run project scr
 
 ## Chrome Web Store
 
-- [ ] Build and test `apps/chrome-extension/dist`.
-- [ ] Create the release zip with `pnpm package:extension`.
-- [ ] Upload the zip in the Chrome Developer Dashboard.
-- [ ] Complete the single-purpose, privacy, data-use, and remote-code declarations.
-- [ ] Provide screenshots, icon assets, support contact, privacy-policy URL, and permission justifications.
-- [ ] Submit for review and record the approved Store URL as `NEXT_PUBLIC_CHROME_WEB_STORE_URL`.
+- [x] Build and test `apps/chrome-extension/dist`.
+- [x] Create the release zip with `pnpm package:extension`.
+- [x] Upload the zip in the Chrome Developer Dashboard.
+- [x] Complete the single-purpose, privacy, data-use, and remote-code declarations.
+- [x] Provide screenshots, icon assets, support contact, privacy-policy URL, and permission justifications.
+- [x] Publish version `0.4.2` and record https://chromewebstore.google.com/detail/groundtab/hofdkaefhagmobgomodpekofmghdkpjc as `NEXT_PUBLIC_CHROME_WEB_STORE_URL`.
 - [ ] Verify install, update, uninstall, first-run pairing, Chrome Stable, and Edge behavior from the signed Store build.
 
 Suggested permission disclosures:

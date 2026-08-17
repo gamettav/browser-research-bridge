@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img alt="Chrome MV3" src="https://img.shields.io/badge/Chrome-MV3-185743">
+  <a href="https://chromewebstore.google.com/detail/groundtab/hofdkaefhagmobgomodpekofmghdkpjc"><img alt="Install GroundTab from the Chrome Web Store" src="https://img.shields.io/badge/Chrome_Web_Store-Install-185743?logo=googlechrome&logoColor=white"></a>
   <img alt="Model Context Protocol" src="https://img.shields.io/badge/MCP-local-185743">
   <img alt="Read only" src="https://img.shields.io/badge/browser-read--only-185743">
   <a href="LICENSE"><img alt="Apache 2.0 license" src="https://img.shields.io/badge/license-Apache--2.0-185743"></a>
@@ -31,14 +31,14 @@ Agent:  Searching DuckDuckGo…
 
 The public install flow has three steps:
 
-1. Add **GroundTab** from the Chrome Web Store.
+1. [Add **GroundTab** from the Chrome Web Store](https://chromewebstore.google.com/detail/groundtab/hofdkaefhagmobgomodpekofmghdkpjc).
 2. Install the **GroundTab** plugin in Codex or Claude Code.
 3. Ask the agent to **“set up GroundTab”** and enter its one-time code in the extension.
 
 That is the whole user setup. The agent plugin starts the local MCP broker itself. Users do not clone this repository, install Native Messaging, download a second Chrome, enable Developer Mode, copy an extension ID, or paste a permanent token.
 
 > [!IMPORTANT]
-> GroundTab's Chrome extension is awaiting Web Store review. The Codex and Claude listings are not live yet. Install buttons will become active as each listing is approved.
+> GroundTab for Chrome is live. The Codex and Claude listings are not live yet; their install buttons will become active as each marketplace listing is approved.
 
 ## Where it helps
 
@@ -139,7 +139,7 @@ The extension needs HTTP(S) site access to research without asking for an `activ
 
 The repository produces three packages:
 
-- Chrome Web Store extension: `apps/chrome-extension/dist`
+- [Chrome Web Store extension](https://chromewebstore.google.com/detail/groundtab/hofdkaefhagmobgomodpekofmghdkpjc) (public version `0.4.2`)
 - Codex plugin: `integrations/codex/groundtab`
 - Claude Code plugin: `integrations/claude/groundtab`
 
@@ -171,9 +171,8 @@ Requirements: Node 20.11+ and pnpm 10. The marketplace plugins currently launch 
 
 The technical MVP is green: static fetch, rendered fallback, policy enforcement, cancellation, provider recovery, source-quality checks, pairing, plugin validation, and the clean built-package pairing flow all pass locally.
 
-Public availability still depends on three publisher reviews:
+The Chrome extension is published. Complete public availability still depends on two agent-marketplace reviews:
 
-- Chrome Web Store
 - Codex plugin directory
 - Claude Code marketplace
 
