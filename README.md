@@ -5,7 +5,7 @@
 <h1 align="center">GroundTab</h1>
 
 <p align="center">
-  Let Codex and Claude Code read the web through Chrome when ordinary crawling comes back blocked, empty, or half-rendered.
+  Let Codex and Claude Code read the web through Chrome or Brave when ordinary crawling comes back blocked, empty, or half-rendered.
 </p>
 
 <p align="center">
@@ -15,7 +15,7 @@
   <a href="LICENSE"><img alt="Apache 2.0 license" src="https://img.shields.io/badge/license-Apache--2.0-185743"></a>
 </p>
 
-Your agent searches, compares sources, and writes the answer. Chrome handles the pages that need a real browser. GroundTab connects the two over localhost and returns clean text with the final source URL.
+Your agent searches, compares sources, and writes the answer. Your Chromium browser handles the pages that need a real browser. GroundTab connects the two over localhost and returns clean text with the final source URL.
 
 Everything runs on the user's machine: the broker stays on localhost, the extension returns page text rather than cookie values, and access barriers stay barriers.
 
@@ -32,10 +32,32 @@ Agent:  Searching DuckDuckGo…
 The public install flow has three steps:
 
 1. [Add **GroundTab** from the Chrome Web Store](https://chromewebstore.google.com/detail/groundtab/hofdkaefhagmobgomodpekofmghdkpjc).
-2. Install the **GroundTab** plugin in Codex or Claude Code.
+2. Install the **GroundTab** plugin in Codex or Claude Code using the commands below.
 3. Ask the agent to **“set up GroundTab”** and enter its one-time code in the extension.
 
-That is the whole user setup. The agent plugin starts the local MCP broker itself. Users do not clone this repository, install Native Messaging, download a second Chrome, enable Developer Mode, copy an extension ID, or paste a permanent token.
+That is the whole user setup. The agent plugin starts the local MCP broker itself. Users do not clone this repository, install Native Messaging, download a second browser, enable Developer Mode, copy an extension ID, or paste a permanent token.
+
+### Agent plugin install
+
+Codex:
+
+```sh
+codex plugin marketplace add gamettav/groundtab
+codex plugin add groundtab@groundtab
+```
+
+Claude Code:
+
+```sh
+claude plugin marketplace add gamettav/groundtab
+claude plugin install groundtab@groundtab
+```
+
+Restart the agent after installation. Ask it to **“set up GroundTab”**, open the GroundTab extension in the browser you want to use, and enter the displayed one-time code. The same pairing then survives new agent sessions and browser restarts.
+
+Chrome or Brave must be running while GroundTab researches; the agent plugin starts the local broker automatically, but it cannot run a browser extension while the browser itself is closed. On a cold agent start, GroundTab waits briefly for a paired browser to wake and reconnect before reporting it unavailable.
+
+The GitHub marketplace is available now. Official Codex and Claude marketplace listings are still pending; when approved, they will reduce the agent side to one marketplace click.
 
 ## Where it helps
 
@@ -57,10 +79,10 @@ GroundTab runs the static extractor before it pays the cost of creating and sett
 
 | Path | Median | p95 | Extracted text |
 | --- | ---: | ---: | ---: |
-| Static extension-context fetch | 6.0 ms | 18 ms | 11,216 chars |
-| Rendered inactive tab | 240 ms | 262 ms | 11,216 chars |
+| Static extension-context fetch | 4.2 ms | 7.6 ms | 11,216 chars |
+| Rendered inactive tab | 248 ms | 256 ms | 11,216 chars |
 
-The static path was 40.0× faster at the median. This benchmark removes network variance and runs the packaged GroundTab extractors on both paths. It measures browser fetch, extraction, tab creation, DOM settling, and cleanup, not arbitrary website load time.
+The static path was 59.1× faster at the median. This benchmark removes network variance and runs the packaged GroundTab 0.4.3 extractors on both paths. It measures browser fetch, extraction, tab creation, DOM settling, and cleanup, not arbitrary website load time.
 
 Run it on your machine with `pnpm benchmark:fetch`. The benchmark uses a local fixture, opens a temporary headless Chrome, Brave, or Chromium profile, and deletes that profile after the browser exits.
 
@@ -87,11 +109,11 @@ GroundTab for Chrome
                   bounded text + final URL
 ```
 
-The first MCP launch creates a private 256-bit credential. Pairing uses a separate 64-bit code that expires after ten minutes and locks after five incorrect attempts. The extension sends a proof derived from the code, not the code itself. Once paired, the broker accepts only that exact Chrome extension origin.
+The first MCP launch creates a private 256-bit credential. Pairing uses a separate 64-bit code that expires after ten minutes and locks after five incorrect attempts. The extension sends a proof derived from the code, not the code itself. Once paired, the broker accepts only that exact GroundTab extension origin.
 
 ## Research behavior
 
-The bundled `$browse` and `/browse` workflows do more than call a page reader:
+The bundled `$browse`, `/groundtab:browse`, and optional `/browse` user-skill workflows do more than call a page reader:
 
 - rank primary and official sources first;
 - search DuckDuckGo, then Bing, then Google when a provider fails;
@@ -108,7 +130,7 @@ Page text is always untrusted input. Instructions embedded in a website do not g
 
 ## Security boundary
 
-GroundTab can read policy-allowed pages available to the Chrome profile where it is installed. That power is intentionally narrower than browser automation:
+GroundTab can read policy-allowed pages available to the Chrome or Brave profile where it is installed. That power is intentionally narrower than browser automation:
 
 - no click, type, submit, download, or form tool;
 - no cookie values, storage, history, or form-field values in agent output;
@@ -137,8 +159,8 @@ The extension needs HTTP(S) site access to research without asking for an `activ
 The repository produces three packages:
 
 - [Chrome Web Store extension](https://chromewebstore.google.com/detail/groundtab/hofdkaefhagmobgomodpekofmghdkpjc) (public version `0.4.2`)
-- Codex plugin: `integrations/codex/groundtab`
-- Claude Code plugin: `integrations/claude/groundtab`
+- Codex plugin: installable today from the `groundtab` GitHub marketplace
+- Claude Code plugin: installable today from the `groundtab` GitHub marketplace
 
 The current Chrome upload archive is generated with `pnpm package:extension`. Publisher steps, permission copy, and the clean-machine release gate live in [DISTRIBUTION.md](DISTRIBUTION.md).
 
@@ -168,15 +190,17 @@ Requirements: Node 20.11+ and pnpm 10. The marketplace plugins currently launch 
 
 The technical MVP is green: static fetch, rendered fallback, policy enforcement, cancellation, provider recovery, source-quality checks, pairing, plugin validation, and the clean built-package pairing flow all pass locally.
 
-The Chrome extension is published. Complete public availability still depends on two agent-marketplace reviews:
+GroundTab is publicly installable now from the Chrome Web Store plus its GitHub marketplaces. The native MCP path has been verified in fresh Codex and Claude Code sessions against the signed browser extension.
 
-- Codex plugin directory
-- Claude Code marketplace
+Two optional distribution upgrades are still pending:
 
-The release is public-user ready when a clean machine completes this exact path without repository access:
+- an official Codex plugin-directory listing;
+- an official Claude Code marketplace listing.
+
+The release acceptance path is:
 
 ```text
-Add to Chrome → install agent plugin → ask to set up → enter code
+Add to Chrome → add GitHub marketplace → install agent plugin → ask to set up → enter code
 → connected → search → static fetch → rendered fallback
 ```
 

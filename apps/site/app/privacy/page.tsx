@@ -12,7 +12,7 @@ export default function Privacy() {
 
       <h2>Data processed on your device</h2>
       <p>When you ask your agent to research a URL, the extension may request that public page, briefly render it in an inactive tab, and return bounded readable text and source metadata to the local agent plugin. It does not return cookie values, browser storage, browsing history outside requested research, form-field values, or password data.</p>
-      <p>The extension stores a generated pairing credential, local connection status, and broker port in Chrome extension storage. The agent plugin stores its matching credential and optional research policy in a private local configuration file.</p>
+      <p>The extension stores a generated pairing credential, local connection status, and broker port in browser extension storage. The agent plugin stores its matching credential and optional research policy in a private local configuration file.</p>
 
       <h2>How data is used</h2>
       <p>Page URLs and website content are used only to complete research requested by the user. Results travel over the loopback interface to the local agent plugin. The user&apos;s Codex or Claude Code application may then send those results to its model provider under the provider&apos;s terms and privacy policy.</p>

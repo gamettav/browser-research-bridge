@@ -5,10 +5,10 @@ Last updated: 2026-08-17
 ## Product installation contract
 
 - Chrome extension installs through the Chrome Web Store.
-- Codex and Claude Code install their GroundTab plugin/MCP through the agent's normal plugin surface.
+- Codex and Claude Code install their GroundTab plugin/MCP through the agent's normal plugin surface; the repository-root GitHub marketplaces are live today.
 - The plugin automatically creates private local configuration and starts the broker; the user does not run or supervise a script.
 - The extension and plugin pair once with a short-lived code. There is no Native Messaging installation, dedicated Chrome download, Developer Mode, extension-ID copy, or long-lived token paste.
-- The website exposes only real Store/marketplace links. Pending releases are labeled pending instead of falling back to source-code instructions.
+- The website links to the signed Chrome listing and the supported GitHub marketplace instructions. Official agent-directory listings remain clearly labeled as pending.
 
 ## Passed locally
 
@@ -29,13 +29,14 @@ Last updated: 2026-08-17
 These are external distribution gates, not user setup steps:
 
 - Chrome Web Store: published publicly as version `0.4.2` at https://chromewebstore.google.com/detail/groundtab/hofdkaefhagmobgomodpekofmghdkpjc.
+- GitHub marketplace manifests for Codex and Claude Code: packaged and verified locally for version `0.4.3`.
 - Codex plugin-directory submission, review, and approved install URL.
 - Claude Code marketplace submission, review, and approved install URL.
 - Clean-machine acceptance from all three signed/reviewed packages.
 
-The app becomes user-ready only after all three distribution links are live and the clean-machine flow passes:
+The app is installable now through Chrome plus the GitHub marketplaces. Official one-click directory availability still requires the remaining reviews and this clean-machine flow:
 
-`Add to Chrome → install agent plugin → ask to set up → enter code → connected → search → static fetch → rendered fallback`
+`Add to Chrome → add GitHub marketplace → install agent plugin → ask to set up → enter code → connected → search → static fetch → rendered fallback`
 
 ## Deferred after MVP
 

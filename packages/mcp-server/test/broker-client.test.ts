@@ -40,6 +40,18 @@ describe("BrokerClient", () => {
     await client.close();
   });
 
+  it("waits for a paired extension to wake on a cold broker start", async () => {
+    server = new WebSocketServer({ host: "127.0.0.1", port: 0 });
+    await new Promise<void>((resolve) => server!.once("listening", resolve));
+    server.on("connection", (socket) => respondAsBroker(socket, { connectOnStatusRequest: 2 }));
+    const address = server.address();
+    if (typeof address !== "object" || !address) throw new Error("Missing test broker address");
+
+    const client = await BrokerClient.connect(options(address.port));
+    await expect(client.getStatus(2_000)).resolves.toMatchObject({ connected: true });
+    await client.close();
+  });
+
   it("relays broker_progress events to the runJob progress callback", async () => {
     server = new WebSocketServer({ host: "127.0.0.1", port: 0 });
     await new Promise<void>((resolve) => server!.once("listening", resolve));
@@ -182,7 +194,7 @@ describe("BrokerClient", () => {
         channel: "broker-client",
         nonce: "c".repeat(64),
         protocolVersion: PROTOCOL_VERSION,
-        serverVersion: "0.4.2",
+        serverVersion: "0.4.3",
         serverBuildId: BRIDGE_BUILD_ID,
         proof: "0".repeat(64)
       }));
@@ -205,11 +217,12 @@ function options(port: number) {
 
 function respondAsBroker(
   socket: WebSocket,
-  overrides: { protocolVersion?: number; serverVersion?: string; holdJobs?: boolean } = {}
+  overrides: { protocolVersion?: number; serverVersion?: string; holdJobs?: boolean; connectOnStatusRequest?: number } = {}
 ): void {
   const nonce = "b".repeat(64);
   const protocolVersion = overrides.protocolVersion ?? PROTOCOL_VERSION;
-  const serverVersion = overrides.serverVersion ?? "0.4.2";
+  const serverVersion = overrides.serverVersion ?? "0.4.3";
+  let statusRequests = 0;
   void hmacSha256Hex(token, serverProofPayload("broker-client", nonce, protocolVersion, BRIDGE_BUILD_ID)).then((proof) => {
     socket.send(JSON.stringify({
       type: "auth_challenge",
@@ -238,21 +251,23 @@ function respondAsBroker(
       return;
     }
     if (message.type === "broker_request" && message.operation === "status") {
+      statusRequests += 1;
+      const connected = overrides.connectOnStatusRequest === undefined || statusRequests >= overrides.connectOnStatusRequest;
       socket.send(JSON.stringify({
         type: "broker_response",
         id: message.id ?? randomUUID(),
         ok: true,
         result: {
-          connected: true,
+          connected,
           expectedOrigin: "chrome-extension://abcdefghijklmnopabcdefghijklmnop",
           pairingRequired: false,
           pairingCode: null,
           pairingExpiresAt: null,
           pairingAttemptsRemaining: null,
           port: 32189,
-          extensionVersion: "0.2.0",
-          connectedAt: new Date().toISOString(),
-          lastHeartbeatAt: new Date().toISOString(),
+          extensionVersion: connected ? "0.2.0" : null,
+          connectedAt: connected ? new Date().toISOString() : null,
+          lastHeartbeatAt: connected ? new Date().toISOString() : null,
           pendingJobs: 0,
           brokerClients: 2,
           brokerVersion: serverVersion,

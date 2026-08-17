@@ -23,13 +23,13 @@ const expression = `new Promise(async resolve => {
   port.onMessage.addListener(async message => {
     if (message?.type === 'native_bootstrap_config') {
       token = message.token;
-      port.postMessage({ type: 'extension_hello', extensionId: chrome.runtime.id, hasToken: true, clientVersion: chrome.runtime.getManifest().version, clientBuildId: 'groundtab-0.4.2-pairing-v3' });
+      port.postMessage({ type: 'extension_hello', extensionId: chrome.runtime.id, hasToken: true, clientVersion: chrome.runtime.getManifest().version, clientBuildId: 'groundtab-0.4.3-pairing-v3' });
       return;
     }
     if (message?.type === 'auth_challenge') {
       const expected = await hmac('groundtab|server|extension|' + message.nonce + '|' + message.protocolVersion + '|' + message.serverBuildId);
       if (expected !== message.proof) return resolve({ ok: false, error: 'invalid server proof' });
-      const clientBuildId = 'groundtab-0.4.2-pairing-v3';
+      const clientBuildId = 'groundtab-0.4.3-pairing-v3';
       const proof = await hmac('groundtab|client|extension|' + message.nonce + '|2|' + chrome.runtime.id + '|' + clientBuildId);
       port.postMessage({ type: 'auth_response', channel: 'extension', nonce: message.nonce, protocolVersion: 2, clientId: chrome.runtime.id, clientVersion: chrome.runtime.getManifest().version, clientBuildId, proof });
       return;

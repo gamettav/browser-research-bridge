@@ -3,9 +3,10 @@ import { ThemeToggle } from "../components/ThemeToggle";
 const REPO = process.env.NEXT_PUBLIC_REPOSITORY_URL ?? "https://github.com/gamettav/groundtab";
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
-const CHROME_STORE_URL = process.env.NEXT_PUBLIC_CHROME_WEB_STORE_URL;
-const CODEX_PLUGIN_URL = process.env.NEXT_PUBLIC_CODEX_PLUGIN_URL;
-const CLAUDE_PLUGIN_URL = process.env.NEXT_PUBLIC_CLAUDE_PLUGIN_URL;
+const CHROME_STORE_URL = process.env.NEXT_PUBLIC_CHROME_WEB_STORE_URL
+  ?? "https://chromewebstore.google.com/detail/groundtab/hofdkaefhagmobgomodpekofmghdkpjc";
+const CODEX_PLUGIN_URL = process.env.NEXT_PUBLIC_CODEX_PLUGIN_URL ?? `${REPO}#agent-plugin-install`;
+const CLAUDE_PLUGIN_URL = process.env.NEXT_PUBLIC_CLAUDE_PLUGIN_URL ?? `${REPO}#agent-plugin-install`;
 
 const TERMINAL_HTML = `<span class="t-prompt">▸</span> <span class="t-key">fetch_rendered_page</span>(
     url=<span class="t-str">"https://docs.example.dev/api/rate-limits"</span>
@@ -55,27 +56,26 @@ const never = [
 ];
 
 const steps = [
-  { title: "Add the Chrome extension", body: <>Install GroundTab from the Chrome Web Store like any other extension. No Developer Mode or separate Chrome download.</> },
+  { title: "Add the browser extension", body: <>Install GroundTab from the Chrome Web Store in Chrome or Brave. No Developer Mode or separate browser download.</> },
   { title: "Install it in your agent", body: <>Add the GroundTab plugin in Codex or Claude Code. The plugin launches its local MCP broker when the agent starts.</> },
   { title: "Pair once", body: <>Ask the agent to <strong>set up GroundTab</strong>, then enter its short-lived code in the extension. No extension ID, token, or terminal setup.</> },
 ];
 
 const faqs = [
-  { q: "Does it expose my cookies or browsing history?", a: "No cookie values, storage, history, or form values are returned to the agent. Page requests follow Chrome's normal rules, so install it only in a profile whose site access you are comfortable granting; sensitive signed-in domains are denied by default.", open: true },
+  { q: "Does it expose my cookies or browsing history?", a: "No cookie values, storage, history, or form values are returned to the agent. Page requests follow the browser's normal rules, so install it only in a profile whose site access you are comfortable granting; sensitive signed-in domains are denied by default.", open: true },
   { q: "Is this a scraper or a bot-evasion tool?", a: "No. It renders pages a normal Chrome tab can open and returns structured errors on CAPTCHAs, logins, and access denials instead of getting around them. There is no stealth, no fingerprint spoofing, and no “open any site” claim — only pages your profile is already authorized to view." },
   { q: "What happens when a source fails?", a: "The bundled research skill retries one transient navigation failure, switches search providers or source domains, removes canonical and syndicated duplicates, and stops once independent evidence is sufficient. If material evidence is still missing, it returns “Research incomplete” instead of guessing." },
+  { q: "Does Chrome or Brave need to be open?", a: "Yes. The agent plugin starts GroundTab's local broker automatically, but a browser extension cannot run while its browser is fully closed. On a cold start, GroundTab briefly waits for the paired browser to wake and reconnect before telling you to open it." },
   { q: "Is it safe to run?", a: "Ordinary browsing and audit export are read-only; explicit maintenance tools can delete retained captures or audits. The broker is localhost-only, pairing uses a short-lived proof, later connections authenticate by challenge–response, and DNS checks fail closed against private targets. Chrome's site-access controls remain available if you want a narrower allowlist." },
   { q: "Why does the extension request access to all sites?", a: "Unattended research can't rely on Chrome's activeTab permission, which needs a click each time. You can still restrict site access in Chrome — autonomous calls outside those origins then fail closed." },
   { q: "How is this different from Claude in Chrome?", a: "It works with Codex too, exposes a harness-neutral MCP surface, and keeps ordinary research deterministic and read-only, with separate explicit maintenance tools for local retention. Think of it as a complement for agent CLIs, not a replacement for an in-browser assistant." },
 ];
 
-function DistributionLink({ label, href }: { label: string; href: string | undefined }) {
+function DistributionLink({ label, href, linkText = "Install ↗" }: { label: string; href: string; linkText?: string }) {
   return (
     <div className="distribution-link">
       <strong>{label}</strong>
-      {href
-        ? <a href={href}>Install ↗</a>
-        : <span>Publisher review pending</span>}
+      <a href={href}>{linkText}</a>
     </div>
   );
 }
@@ -106,14 +106,14 @@ export default function Home() {
         <section className="hero" style={{ borderTop: 0 }}>
           <div className="wrap hero-grid">
             <div>
-              <p className="eyebrow">Chrome extension · Codex + Claude plugin</p>
+              <p className="eyebrow">Chrome/Brave extension · Codex + Claude plugin</p>
               <h1 className="headline">
                 Your agent got blocked.<br />
                 <span className="em">Your browser didn&apos;t.</span>
               </h1>
               <p className="lede">
                 Add one Chrome extension, install one agent plugin, and pair them once. Claude Code and Codex can then
-                research public pages through Chrome — static first, rendered when needed.
+                research public pages through Chrome or Brave — static first, rendered when needed.
               </p>
               <div className="cta-row">
                 {CHROME_STORE_URL
@@ -170,7 +170,7 @@ export default function Home() {
             <div className="section-head">
               <p className="eyebrow">Security posture</p>
               <h2>The boundary is the point.</h2>
-              <p>This tool reads policy-allowed pages through the Chrome profile where you install it. It is not an anti-bot tool: challenges and access denials trigger rendered fallback or a structured failure, never a bypass.</p>
+              <p>This tool reads policy-allowed pages through the Chrome or Brave profile where you install it. It is not an anti-bot tool: challenges and access denials trigger rendered fallback or a structured failure, never a bypass.</p>
             </div>
             <div className="cols">
               <div className="panel does">
@@ -198,7 +198,7 @@ export default function Home() {
             </div>
             <p className="sec-foot">
               The SSRF, pairing, and malicious-local-process regressions assert that the blocked things stay blocked. The
-              extension never returns cookie values or form data, and Chrome&apos;s normal site-access controls can restrict
+              extension never returns cookie values or form data, and the browser&apos;s normal site-access controls can restrict
               the domains it may read. The complete threat model ships with every release.
             </p>
           </div>
@@ -222,12 +222,12 @@ export default function Home() {
 
             <div className="distribution-grid">
               <DistributionLink label="Chrome extension" href={CHROME_STORE_URL} />
-              <DistributionLink label="Codex plugin" href={CODEX_PLUGIN_URL} />
-              <DistributionLink label="Claude Code plugin" href={CLAUDE_PLUGIN_URL} />
+              <DistributionLink label="Codex plugin" href={CODEX_PLUGIN_URL} linkText={process.env.NEXT_PUBLIC_CODEX_PLUGIN_URL ? "Install ↗" : "Install via GitHub ↗"} />
+              <DistributionLink label="Claude Code plugin" href={CLAUDE_PLUGIN_URL} linkText={process.env.NEXT_PUBLIC_CLAUDE_PLUGIN_URL ? "Install ↗" : "Install via GitHub ↗"} />
             </div>
 
             <div className="callout">
-              <b>RELEASE STATUS</b> — GroundTab for Chrome is live. Codex and Claude Code install buttons will become active after their marketplace reviews; until then they remain pending instead of sending users to source-code setup.
+              <b>AVAILABLE NOW</b> — GroundTab for Chrome is live, and both agent plugins install through the repository&apos;s GitHub marketplaces. Official Codex and Claude directory listings are still pending.
             </div>
           </div>
         </section>

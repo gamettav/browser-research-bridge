@@ -58,6 +58,12 @@ export type BrokerConnection = {
   request: import("node:http").IncomingMessage;
 };
 
+type PairingState = {
+  code: string;
+  expiresAt: number;
+  attemptsRemaining: number;
+};
+
 export class BrowserBridge {
   port: number;
   readonly ready: Promise<void>;
@@ -73,7 +79,7 @@ export class BrowserBridge {
   private runningJobs = 0;
   private readonly maxParallelJobs = 2;
   private brokerClients = 0;
-  private pairing: { code: string; expiresAt: number; attemptsRemaining: number } | null = null;
+  private pairing: PairingState | null = null;
   onBrokerConnection: ((connection: BrokerConnection) => void) | undefined;
 
   constructor(options: BridgeOptions) {
@@ -110,11 +116,12 @@ export class BrowserBridge {
 
   getStatus() {
     const connected = this.socket?.readyState === WebSocket.OPEN;
-    const pairing = connected ? null : this.ensurePairing();
+    const pairingRequired = !connected && this.expectedOrigin === null;
+    const pairing = pairingRequired ? this.ensurePairing() : null;
     return {
       connected,
       expectedOrigin: this.expectedOrigin,
-      pairingRequired: !connected,
+      pairingRequired,
       pairingCode: pairing?.code ?? null,
       pairingExpiresAt: pairing ? new Date(pairing.expiresAt).toISOString() : null,
       pairingAttemptsRemaining: pairing?.attemptsRemaining ?? null,
@@ -136,7 +143,7 @@ export class BrowserBridge {
   async runJob(job: BrowserJob, onProgress?: (event: ProgressEvent) => void, signal?: AbortSignal): Promise<JobResultMessage> {
     if (signal?.aborted) throw abortError();
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-      throw new Error("Chrome extension is not connected. Open Chrome and check the GroundTab extension options.");
+      throw new Error("GroundTab is not connected. Open the extension in Chrome or Brave and check its connection status.");
     }
 
     const id = randomUUID();
@@ -200,6 +207,7 @@ export class BrowserBridge {
   private handleExtension(socket: WebSocket, extensionId: string): void {
     let state: "hello" | "auth" | "pairing" | "authenticated" = "hello";
     let nonce: string | null = null;
+    let pairingSession: PairingState | null = null;
     const authTimer = setTimeout(() => socket.close(1008, "authentication timeout"), 5_000);
 
     socket.on("message", async (raw) => {
@@ -244,6 +252,7 @@ export class BrowserBridge {
         }
 
         const pairing = this.ensurePairing();
+        pairingSession = pairing;
         if (pairing.attemptsRemaining === 0) {
           sendPairingError(socket, "locked", "Too many incorrect pairing attempts; wait for a new code", 0);
           socket.close(1008, "pairing locked");
@@ -264,14 +273,14 @@ export class BrowserBridge {
 
       if (state === "pairing") {
         const parsed = PairingSubmitSchema.safeParse(input);
-        const pairing = this.ensurePairing();
-        if (!parsed.success || parsed.data.nonce !== nonce) {
-          sendPairingError(socket, "invalid_code", "The pairing proof was invalid", pairing.attemptsRemaining);
-          return;
-        }
-        if (Date.now() >= pairing.expiresAt) {
+        const pairing = pairingSession;
+        if (!pairing || Date.now() >= pairing.expiresAt) {
           sendPairingError(socket, "expired", "The pairing code expired; request a new code from your agent", null);
           socket.close(1008, "pairing expired");
+          return;
+        }
+        if (!parsed.success || parsed.data.nonce !== nonce) {
+          sendPairingError(socket, "invalid_code", "The pairing proof was invalid", pairing.attemptsRemaining);
           return;
         }
         if (pairing.attemptsRemaining === 0) {
@@ -400,12 +409,12 @@ export class BrowserBridge {
       if (this.socket === socket) {
         this.socket = null;
         this.extensionVersion = null;
-        this.rejectAllPending(new Error("Chrome extension disconnected while the browser job was running"));
+        this.rejectAllPending(new Error("GroundTab browser extension disconnected while the browser job was running"));
       }
     });
   }
 
-  private ensurePairing(): { code: string; expiresAt: number; attemptsRemaining: number } {
+  private ensurePairing(): PairingState {
     if (!this.pairing || Date.now() >= this.pairing.expiresAt) {
       const compact = randomBytes(8).toString("hex").toUpperCase();
       this.pairing = {

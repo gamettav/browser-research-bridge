@@ -10,6 +10,9 @@ const pairingPanel = requireElement<HTMLElement>("pairing-panel");
 void chrome.storage.local.get(["connectionStatus", "pairingState"]).then((stored) => {
   renderStatus(stored.connectionStatus);
   renderPairingState(stored.pairingState);
+  return chrome.runtime.sendMessage({ type: "connection_refresh" });
+}).catch(() => {
+  status.textContent = "Could not wake the GroundTab extension. Reload this page and try again.";
 });
 
 codeInput.addEventListener("input", () => {

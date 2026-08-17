@@ -5,7 +5,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "GroundTab",
   description:
-    "A Chrome extension and agent plugin that give Claude Code and Codex local, read-only web research with one-time pairing.",
+    "A Chrome and Brave extension plus agent plugins that give Claude Code and Codex local, read-only web research with one-time pairing.",
 };
 
 // Applies a saved theme before first paint so an explicit light/dark choice

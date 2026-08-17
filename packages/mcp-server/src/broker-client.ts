@@ -50,11 +50,14 @@ export class BrokerClient {
     return client;
   }
 
-  async getStatus(): Promise<BrokerStatus> {
-    const response = await this.request({ operation: "status" }, 5_000);
-    if (!response.ok) throw new Error(response.error.message);
-    if (!("connected" in response.result)) throw new Error("Broker returned an invalid status response");
-    return response.result;
+  async getStatus(waitForExtensionMs = 0, signal?: AbortSignal): Promise<BrokerStatus> {
+    const deadline = Date.now() + Math.max(0, waitForExtensionMs);
+    let status = await this.getStatusOnce(signal);
+    while (!status.connected && status.expectedOrigin !== null && Date.now() < deadline) {
+      await delay(Math.min(500, deadline - Date.now()), signal);
+      status = await this.getStatusOnce(signal);
+    }
+    return status;
   }
 
   async runJob(job: BrowserJob, onProgress?: (event: ProgressEvent) => void, signal?: AbortSignal): Promise<JobResultMessage> {
@@ -114,6 +117,13 @@ export class BrokerClient {
     });
     socket.send(JSON.stringify({ type: "broker_request", id, ...payload }));
     return response;
+  }
+
+  private async getStatusOnce(signal?: AbortSignal): Promise<BrokerStatus> {
+    const response = await this.request({ operation: "status" }, 5_000, undefined, signal);
+    if (!response.ok) throw new Error(response.error.message);
+    if (!("connected" in response.result)) throw new Error("Broker returned an invalid status response");
+    return response.result;
   }
 
   private ensureConnected(): Promise<WebSocket> {
@@ -346,8 +356,21 @@ function isBrokerUnavailable(error: unknown): boolean {
   return /ECONNREFUSED|connection timed out|closed \(1006\)/i.test(errorMessage(error));
 }
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function delay(ms: number, signal?: AbortSignal): Promise<void> {
+  if (signal?.aborted) return Promise.reject(abortError());
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(finish, Math.max(0, ms));
+    const onAbort = () => {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", onAbort);
+      reject(abortError());
+    };
+    function finish() {
+      signal?.removeEventListener("abort", onAbort);
+      resolve();
+    }
+    signal?.addEventListener("abort", onAbort, { once: true });
+  });
 }
 
 function errorMessage(error: unknown): string {

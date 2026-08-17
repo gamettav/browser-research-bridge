@@ -1,7 +1,7 @@
 # GENERATED from skills-src/browse.mjs by scripts/generate-skills.mjs. Do not edit; edit the canonical file and run `pnpm generate:skills`.
 interface:
   display_name: "Browse"
-  short_description: "Research the web and answer with cited sources, through the local Chrome bridge."
+  short_description: "Research the web and answer with cited sources, through the local browser bridge."
   default_prompt: "Research this topic through GroundTab and answer with cited final source URLs."
 dependencies:
   tools:

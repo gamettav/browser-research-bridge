@@ -2,8 +2,9 @@
   "mcpServers": {
     "groundtab": {
       "type": "stdio",
+      "cwd": ".",
       "command": "node",
-      "args": ["${PLUGIN_ROOT}/server/index.cjs"]
+      "args": ["./server/index.cjs"]
     }
   }
 }

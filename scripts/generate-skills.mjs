@@ -4,8 +4,7 @@
 //
 // Outputs (all GENERATED — do not hand-edit):
 //   integrations/claude/user-skills/browse/SKILL.md              Claude user skill  (/browse, implicit)
-//   integrations/claude/gt/.claude-plugin/plugin.json            portable Claude plugin `gt`
-//   integrations/claude/gt/commands/browse.md                    Claude plugin command  (/gt:browse)
+//   integrations/claude/groundtab/commands/browse.md             Claude plugin command  (/groundtab:browse)
 //   integrations/codex/groundtab/skills/browse/SKILL.md          Codex skill  ($browse)
 //   integrations/codex/groundtab/skills/browse/agents/openai.yaml  Codex skill UI metadata
 //
@@ -27,7 +26,7 @@ const WHEN_TO_USE =
   "browse the web, search the web for, check the latest on, what's new with, verify online, " +
   "read this link, summarize this URL, open this page";
 
-const SHORT_DESCRIPTION = "Research the web and answer with cited sources, through the local Chrome bridge.";
+const SHORT_DESCRIPTION = "Research the web and answer with cited sources, through the local browser bridge.";
 const TOOL_DEPENDENCY_NOTE = "Read-only GroundTab tools: web search and rendered-page fetch.";
 
 // Directories fully owned by the generator; wiped before each run so renames and
@@ -35,6 +34,7 @@ const TOOL_DEPENDENCY_NOTE = "Read-only GroundTab tools: web search and rendered
 // location under the plugin root).
 const OWNED_DIRS = [
   "integrations/claude/user-skills/browse",
+  "integrations/claude/groundtab/commands",
   "integrations/claude/gt",
   "integrations/codex/groundtab/skills/browse",
   "integrations/codex/groundtab/agents"
@@ -61,22 +61,7 @@ function claudeUserSkill() {
     "---"
   ].join("\n");
   const input = "The user's request (question or URL) is: $ARGUMENTS\n\n";
-  return `${front}\n\n${GEN_MD}\n\n${input}${renderBody("claude")}\n`;
-}
-
-function claudePluginManifest() {
-  return `${JSON.stringify(
-    {
-      name: "gt",
-      displayName: "GroundTab — browse",
-      version: "0.4.2",
-      description: "Portable /gt:browse command: research the web through the local GroundTab bridge.",
-      author: { name: "Local developer" },
-      keywords: ["research", "browse", "web", "mcp"]
-    },
-    null,
-    2
-  )}\n`;
+  return `${front}\n\n${GEN_MD}\n\n${input}${renderBody("claudeUser")}\n`;
 }
 
 function claudePluginCommand() {
@@ -84,11 +69,11 @@ function claudePluginCommand() {
     "---",
     `description: ${y(browse.DESCRIPTION)}`,
     `argument-hint: ${y(browse.ARGUMENT_HINT)}`,
-    `allowed-tools: ${y(browse.allowedToolIds.join(" "))}`,
+    `allowed-tools: ${y(browse.claudePluginAllowedToolIds.join(" "))}`,
     "---"
   ].join("\n");
   const input = "The user's request (question or URL) is: $ARGUMENTS\n\n";
-  return `${front}\n\n${GEN_MD}\n\n${input}${renderBody("claude")}\n`;
+  return `${front}\n\n${GEN_MD}\n\n${input}${renderBody("claudePlugin")}\n`;
 }
 
 function codexSkill() {
@@ -123,8 +108,7 @@ function codexAgents() {
 export function buildArtifacts() {
   return [
     { path: "integrations/claude/user-skills/browse/SKILL.md", content: claudeUserSkill() },
-    { path: "integrations/claude/gt/.claude-plugin/plugin.json", content: claudePluginManifest() },
-    { path: "integrations/claude/gt/commands/browse.md", content: claudePluginCommand() },
+    { path: "integrations/claude/groundtab/commands/browse.md", content: claudePluginCommand() },
     { path: "integrations/codex/groundtab/skills/browse/SKILL.md", content: codexSkill() },
     { path: "integrations/codex/groundtab/skills/browse/agents/openai.yaml", content: codexAgents() }
   ];

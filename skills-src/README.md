@@ -1,6 +1,6 @@
 # Browse command — canonical source
 
-`/browse` (Claude), `/gt:browse` (Claude plugin), and `$browse` (Codex) are all the
+`/browse` (Claude user skill), `/groundtab:browse` (Claude plugin), and `$browse` (Codex) are all the
 **same research command**, generated from one canonical definition so the harnesses can
 never drift apart. Generated artifacts are validated against the real harness loaders by
 `pnpm validate:skills`, which is part of `pnpm check`.
@@ -21,7 +21,7 @@ never drift apart. Generated artifacts are validated against the real harness lo
 | Path | Harness | Invoked as |
 | --- | --- | --- |
 | `integrations/claude/user-skills/browse/SKILL.md` | Claude Code (user skill) | `/browse`, plus implicit activation |
-| `integrations/claude/gt/.claude-plugin/plugin.json` + `gt/commands/browse.md` | Claude Code (plugin `gt`) | `/gt:browse` |
+| `integrations/claude/groundtab/commands/browse.md` | Claude Code (plugin `groundtab`) | `/groundtab:browse` |
 | `integrations/codex/groundtab/skills/browse/SKILL.md` | Codex (plugin skill) | `$browse`, plus implicit activation |
 | `integrations/codex/groundtab/skills/browse/agents/openai.yaml` | Codex (skill UI metadata) | display name / short description / default prompt / MCP tool dependency |
 
@@ -38,8 +38,8 @@ pnpm install:skills                       # installs into $CLAUDE_CONFIG_DIR or 
 node scripts/install-skills.mjs --config-dir ~/.claude-personal   # explicit target
 ```
 
-**Claude portable plugin (`/gt:browse`)** — add `integrations/claude/gt` as a plugin. It is a
-thin command layer that relies on the `groundtab` MCP server already being configured.
+**Claude plugin (`/groundtab:browse`)** — install the unified `integrations/claude/groundtab`
+plugin. It contains both the command and the bundled `groundtab` MCP server.
 
 **Codex (`$browse`)** — install the plugin from the bundled local marketplace:
 

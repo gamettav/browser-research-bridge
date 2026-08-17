@@ -1,0 +1,20 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "groundtab",
+  "description": "GroundTab browser research for Claude Code.",
+  "owner": {
+    "name": "GroundTab"
+  },
+  "plugins": [
+    {
+      "name": "groundtab",
+      "description": "Research the web through the paired GroundTab extension in Chrome or Brave.",
+      "author": {
+        "name": "GroundTab"
+      },
+      "source": "./integrations/claude/groundtab",
+      "category": "productivity",
+      "homepage": "https://gamettav.github.io/groundtab/"
+    }
+  ]
+}

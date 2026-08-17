@@ -1,7 +1,7 @@
 {
   "name": "groundtab",
-  "version": "0.4.2",
-  "description": "Research web pages through the GroundTab Chrome extension.",
+  "version": "0.4.3",
+  "description": "Research web pages through the paired GroundTab extension in Chrome or Brave.",
   "author": {
     "name": "GroundTab"
   },
@@ -11,8 +11,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "GroundTab",
-    "shortDescription": "Research the web through your Chrome extension.",
-    "longDescription": "GroundTab adds read-only MCP tools for autonomous discovery and page extraction through the paired GroundTab Chrome extension. The local broker starts with the plugin and pairs once without exposing browser cookies or a long-lived credential.",
+    "shortDescription": "Research through your Chrome or Brave extension.",
+    "longDescription": "GroundTab adds read-only MCP tools for autonomous discovery and page extraction through the paired GroundTab extension in Chrome or Brave. The local broker starts with the plugin and pairs once without exposing browser cookies or a long-lived credential.",
     "developerName": "GroundTab",
     "category": "Productivity",
     "capabilities": ["Read"],

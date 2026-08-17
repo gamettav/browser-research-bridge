@@ -79,6 +79,10 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (sender.id !== chrome.runtime.id || sender.url !== chrome.runtime.getURL("options.html")) return;
+  if (message?.type === "connection_refresh") {
+    void connect().then(() => sendResponse({ ok: true }));
+    return true;
+  }
   if (message?.type === "pairing_submit") {
     void submitPairingCode(String(message.code ?? "")).then(sendResponse);
     return true;
@@ -97,6 +101,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 chrome.action.onClicked.addListener(() => {
+  void connect();
   void chrome.runtime.openOptionsPage();
 });
 

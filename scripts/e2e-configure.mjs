@@ -41,7 +41,7 @@ function cdp(method, params = {}) {
 if (!Number.isInteger(bridgePort) || bridgePort < 1024 || bridgePort > 65535) throw new Error("GROUNDTAB_PORT is invalid");
 const configuration = { token, port: bridgePort };
 const evaluation = await cdp("Runtime.evaluate", {
-  expression: `chrome.storage.local.set(${JSON.stringify(configuration)}).then(() => chrome.runtime.sendMessage({ type: "config_updated" })).then(() => true)`,
+  expression: `chrome.storage.local.set(${JSON.stringify(configuration)}).then(() => chrome.runtime.sendMessage({ type: "connection_refresh" })).then(() => true)`,
   awaitPromise: true,
   returnByValue: true
 });

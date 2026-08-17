@@ -105,7 +105,7 @@ export async function loadServerConfig(environment: NodeJS.ProcessEnv = process.
     throw new Error(`GroundTab could not load a valid 64-character lowercase hexadecimal token from ${configPath}`);
   }
   if (extensionId !== null && !/^[a-p]{32}$/.test(extensionId)) {
-    throw new Error(`The Chrome extension ID in ${configPath} is invalid`);
+    throw new Error(`The GroundTab extension ID in ${configPath} is invalid`);
   }
 
   const domainAllowlist = domainListSetting(
@@ -184,7 +184,7 @@ export async function loadServerConfig(environment: NodeJS.ProcessEnv = process.
 }
 
 export async function persistPairedExtension(config: ServerConfig, extensionId: string): Promise<void> {
-  if (!/^[a-p]{32}$/.test(extensionId)) throw new Error("Cannot persist an invalid Chrome extension ID");
+  if (!/^[a-p]{32}$/.test(extensionId)) throw new Error("Cannot persist an invalid GroundTab extension ID");
   if (config.source === "environment") {
     throw new Error("Pairing is unavailable when all bridge settings come only from environment variables");
   }

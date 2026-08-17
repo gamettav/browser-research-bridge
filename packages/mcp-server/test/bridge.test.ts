@@ -3,6 +3,7 @@ import { WebSocket } from "ws";
 import {
   AuthChallengeSchema,
   BRIDGE_BUILD_ID,
+  PairingErrorSchema,
   PairingOkSchema,
   PairingRequiredSchema,
   PROTOCOL_VERSION,
@@ -194,7 +195,7 @@ describe("BrowserBridge", () => {
       nonce: challenge.nonce,
       protocolVersion: PROTOCOL_VERSION,
       clientId: extensionId,
-      clientVersion: "0.4.2",
+      clientVersion: "0.4.3",
       clientBuildId: BRIDGE_BUILD_ID,
       proof: await hmacSha256Hex(wrongToken, clientProofPayload("extension", challenge.nonce, PROTOCOL_VERSION, extensionId, BRIDGE_BUILD_ID))
     }));
@@ -249,6 +250,39 @@ describe("BrowserBridge", () => {
     expect(pairedExtensionId).toBe(extensionId);
     expect(bridge.getStatus().expectedOrigin).toBe(`chrome-extension://${extensionId}`);
     socket.close();
+    await new Promise<void>((resolve) => socket.once("close", () => resolve()));
+    expect(bridge.getStatus()).toMatchObject({
+      connected: false,
+      expectedOrigin: `chrome-extension://${extensionId}`,
+      pairingRequired: false,
+      pairingCode: null
+    });
+  });
+
+  it("reports an expired code even after bridge status rotates to a fresh code", async () => {
+    bridge = new BrowserBridge({ token, extensionId: null, port: 0 });
+    await bridge.ready;
+    const socket = new WebSocket(`ws://127.0.0.1:${bridge.port}`, { origin: `chrome-extension://${extensionId}` });
+    const messages: unknown[] = [];
+    socket.on("message", (data) => messages.push(JSON.parse(data.toString())));
+    await opened(socket);
+    sendHello(socket, false);
+
+    const required = PairingRequiredSchema.parse(await waitForMessage(messages, "pairing_required"));
+    const stale = (bridge as unknown as { pairing: { code: string; expiresAt: number } }).pairing;
+    const expiredCode = stale.code;
+    stale.expiresAt = Date.now() - 1;
+
+    const freshStatus = bridge.getStatus();
+    expect(freshStatus.pairingCode).not.toBe(expiredCode);
+    socket.send(JSON.stringify({
+      type: "pairing_submit",
+      nonce: required.nonce,
+      proof: await pairingProofHex(expiredCode, pairingSubmitPayload(required.nonce, extensionId, PROTOCOL_VERSION))
+    }));
+
+    const error = PairingErrorSchema.parse(await waitForMessage(messages, "pairing_error"));
+    expect(error).toMatchObject({ code: "expired", attemptsRemaining: null });
   });
 });
 
@@ -281,7 +315,7 @@ async function authenticateExtension(socket: WebSocket, messages: unknown[]): Pr
     nonce: challenge.nonce,
     protocolVersion: PROTOCOL_VERSION,
     clientId: extensionId,
-    clientVersion: "0.4.2",
+    clientVersion: "0.4.3",
     clientBuildId: BRIDGE_BUILD_ID,
     proof: await hmacSha256Hex(token, clientProofPayload("extension", challenge.nonce, PROTOCOL_VERSION, extensionId, BRIDGE_BUILD_ID))
   }));
@@ -293,7 +327,7 @@ function sendHello(socket: WebSocket, hasToken: boolean): void {
     type: "extension_hello",
     extensionId,
     hasToken,
-    clientVersion: "0.4.2",
+    clientVersion: "0.4.3",
     clientBuildId: BRIDGE_BUILD_ID
   }));
 }

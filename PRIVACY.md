@@ -2,7 +2,7 @@
 
 Effective August 14, 2026
 
-GroundTab connects a Chrome extension to a Codex or Claude Code plugin on the same computer. It has no GroundTab cloud service and does not enable remote telemetry by default.
+GroundTab connects its Chrome/Brave extension to a Codex or Claude Code plugin on the same computer. It has no GroundTab cloud service and does not enable remote telemetry by default.
 
 ## Data the extension processes
 
@@ -25,7 +25,7 @@ GroundTab's use of information received from Chrome complies with the Chrome Web
 
 ## Storage and retention
 
-Chrome extension storage holds the generated pairing credential, broker port, and connection status. The local agent plugin holds the matching credential and optional research policy in a private configuration file.
+Browser extension storage holds the generated pairing credential, broker port, and connection status. The local agent plugin holds the matching credential and optional research policy in a private configuration file.
 
 Extracted captures and body-free audit records are bounded and process-local by default. They disappear when the requesting agent process ends. Users can disable capture retention or clear captures and audit records explicitly.
 

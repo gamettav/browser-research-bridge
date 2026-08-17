@@ -10,7 +10,7 @@ const transport = new StdioClientTransport({
 });
 transport.stderr?.on("data", () => undefined);
 
-const client = new Client({ name: "groundtab-source-coverage", version: "0.4.2" });
+const client = new Client({ name: "groundtab-source-coverage", version: "0.4.3" });
 const summary = {};
 
 try {

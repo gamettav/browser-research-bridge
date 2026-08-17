@@ -25,7 +25,7 @@ try {
   const initialized = await request(1, "initialize", {
     protocolVersion: "2025-03-26",
     capabilities: {},
-    clientInfo: { name: "groundtab-doctor", version: "0.4.2" }
+    clientInfo: { name: "groundtab-doctor", version: "0.4.3" }
   });
   if (!initialized?.serverInfo?.name) throw new Error("MCP initialize returned no server information");
   send({ jsonrpc: "2.0", method: "notifications/initialized", params: {} });
@@ -38,7 +38,7 @@ try {
   const statusText = statusResult?.content?.find?.((item) => item?.type === "text")?.text;
   if (typeof statusText !== "string") throw new Error("bridge_status returned no text content");
   const status = JSON.parse(statusText);
-  const expectedBuildId = "groundtab-0.4.2-pairing-v3";
+  const expectedBuildId = "groundtab-0.4.3-pairing-v3";
   if (status.brokerBuildId !== expectedBuildId) {
     throw new Error(`Broker runtime is stale: expected ${expectedBuildId}, got ${status.brokerBuildId ?? "unknown"}`);
   }

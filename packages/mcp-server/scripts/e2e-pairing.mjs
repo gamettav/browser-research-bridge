@@ -37,7 +37,7 @@ const transport = new StdioClientTransport({
   stderr: "pipe"
 });
 transport.stderr?.on("data", (chunk) => process.stderr.write(chunk));
-const client = new Client({ name: "groundtab-pairing-e2e", version: "0.4.2" });
+const client = new Client({ name: "groundtab-pairing-e2e", version: "0.4.3" });
 
 try {
   await client.connect(transport);
@@ -83,7 +83,7 @@ try {
     nonce: challenge.nonce,
     protocolVersion: PROTOCOL_VERSION,
     clientId: extensionId,
-    clientVersion: "0.4.2",
+    clientVersion: "0.4.3",
     clientBuildId: BRIDGE_BUILD_ID,
     proof: await hmacSha256Hex(
       paired.token,
@@ -115,7 +115,7 @@ try {
 }
 
 function hello(hasToken) {
-  return { type: "extension_hello", extensionId, hasToken, clientVersion: "0.4.2", clientBuildId: BRIDGE_BUILD_ID };
+  return { type: "extension_hello", extensionId, hasToken, clientVersion: "0.4.3", clientBuildId: BRIDGE_BUILD_ID };
 }
 
 async function openExtensionSocket(port) {

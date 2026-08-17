@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "GroundTab",
-  "version": "0.4.2",
-  "description": "Ground Codex and Claude Code in real web pages through Chrome.",
+  "version": "0.4.3",
+  "description": "Ground Codex and Claude Code in real web pages through Chrome or Brave.",
   "minimum_chrome_version": "116",
   "permissions": ["alarms", "offscreen", "scripting", "storage", "tabs"],
   "host_permissions": ["http://*/*", "https://*/*"],

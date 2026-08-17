@@ -64,25 +64,22 @@ async function main() {
   }
 
   // 3. Claude plugin command frontmatter + manifest.
-  const command = committed.get("integrations/claude/gt/commands/browse.md");
+  const command = committed.get("integrations/claude/groundtab/commands/browse.md");
   if (command) {
     const fm = frontmatter(command, "claude plugin command");
     if (fm) {
       if (typeof fm["argument-hint"] !== "string") fail("claude plugin command: argument-hint did not survive YAML parse (must be quoted)");
-      if (typeof fm["allowed-tools"] !== "string" || !fm["allowed-tools"].includes("mcp__groundtab__")) {
+      if (typeof fm["allowed-tools"] !== "string" || !fm["allowed-tools"].includes("mcp__plugin_groundtab_groundtab__")) {
         fail("claude plugin command: allowed-tools missing or lost the MCP tool grants");
       }
     }
   }
-  const manifestRaw = committed.get("integrations/claude/gt/.claude-plugin/plugin.json");
-  if (manifestRaw) {
-    try {
-      const manifest = JSON.parse(manifestRaw);
-      if (manifest.name !== "gt") fail("claude plugin manifest: name must be 'gt' so the command is /gt:browse");
-      if ("_generated" in manifest) fail("claude plugin manifest: unsupported '_generated' key must be removed");
-    } catch (error) {
-      fail(`claude plugin manifest: invalid JSON — ${error instanceof Error ? error.message : String(error)}`);
-    }
+  try {
+    const manifest = JSON.parse(await readFile(resolve(ROOT, "integrations/claude/groundtab/.claude-plugin/plugin.json"), "utf8"));
+    if (manifest.name !== "groundtab") fail("claude plugin manifest: name must be 'groundtab' so the command is /groundtab:browse");
+    if ("_generated" in manifest) fail("claude plugin manifest: unsupported '_generated' key must be removed");
+  } catch (error) {
+    fail(`claude plugin manifest: invalid JSON — ${error instanceof Error ? error.message : String(error)}`);
   }
 
   // 4. Codex skill frontmatter.
@@ -115,9 +112,38 @@ async function main() {
     }
   }
 
-  // 6. Stale artifacts must be gone.
+  // 6. Plugin launch manifests must use paths each harness resolves from the plugin root.
+  try {
+    const codexMcp = JSON.parse(await readFile(resolve(ROOT, "integrations/codex/groundtab/.mcp.json"), "utf8"));
+    const groundtab = codexMcp.mcpServers?.groundtab;
+    if (groundtab?.cwd !== "." || groundtab?.command !== "node" || groundtab?.args?.[0] !== "./server/index.cjs") {
+      fail("codex MCP manifest: groundtab must launch ./server/index.cjs with cwd='.'");
+    }
+    if (JSON.stringify(codexMcp).includes("PLUGIN_ROOT")) {
+      fail("codex MCP manifest: PLUGIN_ROOT is not a supported Codex interpolation token");
+    }
+  } catch (error) {
+    fail(`codex MCP manifest: invalid JSON — ${error instanceof Error ? error.message : String(error)}`);
+  }
+
+  for (const [path, expectedPath, label] of [
+    [".agents/plugins/marketplace.json", "./integrations/codex/groundtab", "Codex marketplace"],
+    [".claude-plugin/marketplace.json", "./integrations/claude/groundtab", "Claude marketplace"]
+  ]) {
+    try {
+      const marketplace = JSON.parse(await readFile(resolve(ROOT, path), "utf8"));
+      const plugin = marketplace.plugins?.find?.((candidate) => candidate.name === "groundtab");
+      const sourcePath = typeof plugin?.source === "string" ? plugin.source : plugin?.source?.path;
+      if (!plugin || sourcePath !== expectedPath) fail(`${label}: groundtab source must be ${expectedPath}`);
+    } catch (error) {
+      fail(`${label}: invalid JSON — ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  // 7. Stale artifacts must be gone.
   const stale = [
     "integrations/codex/groundtab/agents/openai.yaml",
+    "integrations/claude/gt",
     "integrations/claude/groundtab/skills/web-research",
     "integrations/codex/groundtab/skills/web-research"
   ];

@@ -7,5 +7,3 @@ artifacts/
 .worktrees/
 *.log
 /config.json
-integrations/codex/groundtab/server/
-integrations/claude/groundtab/server/

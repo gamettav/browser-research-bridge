@@ -3,10 +3,10 @@
 The end-user installation contract is:
 
 1. **Chrome:** click **Add to Chrome** on the product website and complete the Chrome Web Store dialog.
-2. **Agent:** install **GroundTab** from the Codex plugin directory or Claude Code marketplace.
+2. **Agent:** install **GroundTab** from the GitHub marketplace now, or from the official Codex/Claude directory when those listings are approved.
 3. **Pair:** ask the agent to **set up GroundTab**, then enter its one-time code in the extension page.
 
-No public instructions may direct users to clone the repository, run project scripts, install Native Messaging, download Chrome for Testing, enable Developer Mode, copy an extension ID, or paste a bridge token.
+No public instructions may direct users to clone the repository, run project scripts, install Native Messaging, download Chrome for Testing, enable Developer Mode, copy an extension ID, or paste a bridge token. Adding `gamettav/groundtab` through the agent's own marketplace command is a supported end-user install path, not a source checkout.
 
 ## Chrome Web Store
 
@@ -30,20 +30,22 @@ The public manifest does not request Native Messaging and contains no developer-
 
 ## Codex directory
 
-- [ ] Run the plugin validator against `integrations/codex/groundtab`.
-- [ ] Confirm the plugin contains only its skill, MCP manifest, bundled server/broker, and optional probe—not the Chrome extension or legacy installer.
-- [ ] Test install/uninstall, implicit `$browse` activation, explicit setup intent, upgrade, IDE, CLI, and desktop surfaces.
+- [x] Add the repository-root Codex marketplace manifest and verify a clean marketplace install.
+- [x] Confirm the plugin contains only its skill, MCP manifest, bundled server/broker, and optional probe—not the Chrome extension or legacy installer.
+- [x] Verify a fresh Codex CLI session calls the native GroundTab MCP tools through the paired signed extension.
+- [ ] Test official-directory install/uninstall, implicit `$browse` activation, upgrade, IDE, and desktop surfaces.
 - [ ] Submit the plugin through the Codex plugin publishing flow.
 - [ ] Record the approved directory URL as `NEXT_PUBLIC_CODEX_PLUGIN_URL`.
 
 ## Claude Code marketplace
 
-- [ ] Validate `integrations/claude/groundtab` and the `/browse` command/user-skill artifacts.
-- [ ] Test interactive and noninteractive sessions, install/uninstall, MCP startup, pairing, permissions, and upgrade behavior.
+- [x] Add the repository-root Claude marketplace manifest and validate `integrations/claude/groundtab`.
+- [x] Test marketplace install/reinstall, MCP startup, pairing, explicit `/groundtab:browse`, and noninteractive read-only tool permissions with `claude-personal --chrome`.
+- [ ] Test the official marketplace upgrade path and all supported Claude Code surfaces.
 - [ ] Publish through an approved Claude Code marketplace and record its install URL as `NEXT_PUBLIC_CLAUDE_PLUGIN_URL`.
 
 ## Release gate
 
-Do not call the product publicly installable until all three URLs resolve for a logged-out user and a clean-machine smoke test completes this sequence without repository access or user-run scripts:
+GroundTab is publicly installable through the signed Chrome listing and the repository's native Codex/Claude marketplace manifests. Before announcing official agent-directory availability, all three official URLs must resolve for a logged-out user and a clean-machine smoke test must complete:
 
-`Add to Chrome → install agent plugin → ask to set up → enter code → bridge_status connected → one search → one static fetch → one rendered fallback`
+`Add to Chrome → add GitHub marketplace → install agent plugin → ask to set up → enter code → bridge_status connected → one search → one static fetch → one rendered fallback`
